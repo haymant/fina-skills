@@ -39,4 +39,6 @@ When adding a schema:
 
 ## Examples
 
-See [`example/README.md`](example/README.md) for one minimal fixture per reviewed schema and an independent verifier. Run `python schema/example/verify_examples.py --demo` from the repository root; validation uses only the local schemas and the `jsonschema` package, without FinA services, MCP, databases, cloud credentials, or network access.
+See [`examples/basic/README.md`](examples/basic/README.md) for one minimal fixture per reviewed schema and an independent verifier. Run `python schema/examples/basic/verify_examples.py --demo` from the repository root; validation uses only the local schemas and the `jsonschema` package, without FinA services, MCP, databases, cloud credentials, or network access.
+
+See [`examples/fcn/README.md`](examples/fcn/README.md) for the `ELIFCN_KI` term-sheet sample and the real Python-to-MCP scheduler E2E runner. Unlike the basic fixtures, the FCN example requires the local FinA runtime and executes `pricing_and_sensitivity` twice.

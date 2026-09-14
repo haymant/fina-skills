@@ -9,6 +9,7 @@ from pathlib import Path
 from jsonschema import Draft202012Validator
 
 HERE = Path(__file__).resolve().parent
+SCHEMA_ROOT = HERE.parent.parent
 
 
 def main() -> int:
@@ -18,7 +19,7 @@ def main() -> int:
     failures = []
     passed = []
     for example_path in sorted(HERE.glob('*.example.json')):
-        schema_path = HERE.parent / example_path.name.replace('.example.json', '.schema.json')
+        schema_path = SCHEMA_ROOT / example_path.name.replace('.example.json', '.schema.json')
         try:
             schema = json.loads(schema_path.read_text(encoding='utf-8'))
             example = json.loads(example_path.read_text(encoding='utf-8'))
