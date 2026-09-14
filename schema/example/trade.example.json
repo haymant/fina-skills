@@ -1,0 +1,23 @@
+{
+  "trade_id": "TRD-EXAMPLE-001",
+  "instrument_id": "FCN-EXAMPLE-001",
+  "product_type": "FCN",
+  "status": "AMENDED",
+  "notional": 1000000,
+  "currency": "USD",
+  "portfolio": "EQD-DEMO",
+  "quantity": 1000000,
+  "rfq_id": "RFQ-EXAMPLE-001",
+  "accepted_quote_id": "Q-EXAMPLE-001",
+  "quote": {
+    "price": 101.25,
+    "priced_at": "2026-09-14T04:00:00Z"
+  },
+  "terms": {
+    "underlying": "ADBE",
+    "barrier": 0.7,
+    "maturity": "2027-09-14"
+  },
+  "created_at": "2026-09-14T03:55:00Z",
+  "updated_at": "2026-09-14T04:00:00Z"
+}

@@ -1,0 +1,8 @@
+{
+  "risk_factor_id": "EQ:ADBE:SPOT",
+  "measure": "delta",
+  "value": 0.42,
+  "currency": "USD",
+  "method": "AAD",
+  "fallback_reason": null
+}

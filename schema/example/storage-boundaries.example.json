@@ -1,0 +1,17 @@
+{
+  "schema_version": "storage-boundaries.v1",
+  "hot": [
+    "active_jobs",
+    "current_quotes"
+  ],
+  "warm": [
+    "risk_cache",
+    "latest_risk_rows"
+  ],
+  "cold": [
+    "risk_long",
+    "pnl_explain_history"
+  ],
+  "append_policy": "append-only for historical risk and P&L rows",
+  "object_store": "gcs_s3_compatible"
+}

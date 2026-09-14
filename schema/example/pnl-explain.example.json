@@ -1,0 +1,13 @@
+{
+  "valuation_date": "2026-09-14",
+  "actual_pnl": 12500.0,
+  "forecast_pnl": 12100.0,
+  "unexplained_pnl": 400.0,
+  "components": [
+    {
+      "factor_id": "EQ:ADBE:SPOT",
+      "measure": "delta",
+      "contribution": 12100.0
+    }
+  ]
+}

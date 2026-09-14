@@ -36,3 +36,7 @@ When adding a schema:
 4. Update the relevant skill chapter to link to this standalone schema.
 5. Validate JSON syntax and all local `$ref` targets.
 6. Add an example or contract test where ambiguity remains.
+
+## Examples
+
+See [`example/README.md`](example/README.md) for one minimal fixture per reviewed schema and an independent verifier. Run `python schema/example/verify_examples.py --demo` from the repository root; validation uses only the local schemas and the `jsonschema` package, without FinA services, MCP, databases, cloud credentials, or network access.

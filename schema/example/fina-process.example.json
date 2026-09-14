@@ -1,0 +1,71 @@
+{
+  "api_version": "fina/v1",
+  "kind": "FinaProcess",
+  "metadata": {
+    "name": "example-rfq-to-risk"
+  },
+  "parameters": {
+    "correlation_id": "rfq-example-001",
+    "trade_id": "TRD-EXAMPLE-001"
+  },
+  "threads": [
+    {
+      "name": "quote",
+      "handler": "fina-pricer.pricing_and_sensitivity",
+      "parameters": {
+        "context": {
+          "task": "quote",
+          "dependency_results": {}
+        }
+      }
+    },
+    {
+      "name": "register_trade",
+      "handler": "fina-trade.register",
+      "depends_on": [
+        "quote"
+      ],
+      "parameters": {
+        "context": {
+          "task": "register_trade",
+          "dependency_names": [
+            "quote"
+          ]
+        }
+      }
+    },
+    {
+      "name": "reprice",
+      "handler": "fina-pricer.pricing_and_sensitivity",
+      "triggered_by": "trade.lifecycle.amended",
+      "parameters": {
+        "context": {
+          "task": "reprice",
+          "event_from_subscription": true
+        }
+      }
+    },
+    {
+      "name": "olap",
+      "handler": "fina-olap.group_sensitivities",
+      "depends_on": [
+        "reprice"
+      ],
+      "parameters": {
+        "context": {
+          "task": "olap",
+          "dependency_names": [
+            "reprice"
+          ]
+        }
+      }
+    }
+  ],
+  "subscriptions": [
+    {
+      "topic": "trade.lifecycle.amended",
+      "handler": "fina-pricer.pricing_and_sensitivity",
+      "start_thread": "reprice"
+    }
+  ]
+}

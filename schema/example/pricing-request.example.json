@@ -1,0 +1,51 @@
+{
+  "instrument_key": "FCN-EXAMPLE-001",
+  "market_data": {
+    "evaluation_date": "2026-09-14",
+    "underlyings": [
+      {
+        "id": "ADBE",
+        "quoted_spot": 500.0,
+        "reference_spot": 500.0,
+        "currency": "USD"
+      }
+    ],
+    "curves": [],
+    "vol_surfaces": [],
+    "correlations": []
+  },
+  "legs": [
+    {
+      "leg_id": "put",
+      "leg_type": "intrinsic_option",
+      "multiplier": 1.0,
+      "notional": 1000000
+    }
+  ],
+  "parameters": {
+    "bump_size": 0.01,
+    "bump_mode": "relative",
+    "method_priority": [
+      "AAD",
+      "FD"
+    ],
+    "seed": 7
+  },
+  "updated_lifecycle": {
+    "status": "ACTIVE",
+    "already_knock_in": false,
+    "memory_locked": [],
+    "memory_dates": [],
+    "applied_fixings": []
+  },
+  "execution": {
+    "monitoring_frequency": "daily",
+    "sensitivities": "all",
+    "greeks": [
+      "delta",
+      "gamma",
+      "vega"
+    ],
+    "serialize_outputs": true
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "pipelines": [
+    {
+      "name": "example-product-enrichment",
+      "sources": [
+        {
+          "name": "instruments",
+          "uri": "file://examples/instruments.json",
+          "format": "json"
+        }
+      ],
+      "datasets": [
+        {
+          "name": "instruments_flat",
+          "type": "raw",
+          "source": "instruments",
+          "to": {
+            "uri": "file://out/instruments_flat",
+            "format": "parquet",
+            "partition_by": [
+              "currency"
+            ]
+          },
+          "fields": [
+            {
+              "name": "instrument_id",
+              "expression": "$.id"
+            },
+            {
+              "name": "currency",
+              "expression": "coalesce($.currency, 'USD')"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

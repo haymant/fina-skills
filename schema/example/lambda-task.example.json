@@ -1,0 +1,18 @@
+{
+  "task": "quote",
+  "handler": "fina-pricer.pricing_and_sensitivity",
+  "context": {
+    "correlation_id": "rfq-example-001",
+    "inputs": {
+      "instrument_key": "FCN-EXAMPLE-001"
+    },
+    "dependency_results": {},
+    "event": null,
+    "attempt": 1
+  },
+  "output": {
+    "status": "COMPLETED",
+    "pv": 101.25,
+    "currency": "USD"
+  }
+}
