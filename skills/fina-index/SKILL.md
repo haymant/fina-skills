@@ -7,6 +7,8 @@ description: FinA skill-book routing and repository map. Use at the start of any
 
 Start here for every FinA task. Classify the request, load the smallest relevant chapters, then finish with `fina-e2e-coordinator` when more than one service is involved.
 
+Canonical JSON Schemas live in the repository-root `schema/` directory. Read the relevant schema directly instead of relying on prose or a duplicated copy inside a skill.
+
 ## Routing table
 
 | Concern | Chapter |
@@ -34,4 +36,3 @@ Start here for every FinA task. Classify the request, load the smallest relevant
 - `fina-trade`: trade domain and lifecycle persistence.
 - `fina-risk`: risk/pricing engines and conformance lanes.
 - `fina-olap`: OLAP service, React table, demo, and columnar store.
-

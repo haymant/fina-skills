@@ -1,1 +1,0 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","required":["task","handler","context"],"properties":{"task":{"type":"string"},"handler":{"type":"string"},"context":{"type":"object","required":["correlation_id","inputs","dependency_results","event","attempt"]}},"additionalProperties":false}

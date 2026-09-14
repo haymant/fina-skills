@@ -27,3 +27,6 @@ Join risk rows to trade/report manifests using explicit version anchors. Record 
 
 Run Python unit/E2E tests, React unit tests, and demo/browser tests when UI behavior changes. Test filters, grouping, pivot, pagination, exports, object-store resolution, MCP transport, and path rewrites.
 
+## Schema boundary
+
+Risk and trade materializations currently use the reviewed contracts in [`schema/risk-cell.schema.json`](../../schema/risk-cell.schema.json), [`schema/pnl-explain.schema.json`](../../schema/pnl-explain.schema.json), and [`schema/storage-boundaries.schema.json`](../../schema/storage-boundaries.schema.json). Keep report-version and daily materialization schemas pending explicit design review.

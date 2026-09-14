@@ -2,6 +2,8 @@
 
 An agent skill book for the FinA equity-derivative trading ecosystem. Load [`skills/fina-index/SKILL.md`](skills/fina-index/SKILL.md) first; it routes work to the master architecture chapter and focused implementation chapters.
 
+The standalone [`schema/`](schema/) directory contains the reviewed JSON Schema contracts. Load schemas independently from procedural skill guidance; do not embed duplicate schema copies in `SKILL.md` or chapter references.
+
 ## Structure
 
 - `skills/fina-master` — architecture, principles, ADR routing, and non-goals
@@ -13,6 +15,10 @@ An agent skill book for the FinA equity-derivative trading ecosystem. Load [`ski
 - `skills/fina-risk` — pricing, risk, and backend conformance
 - `skills/fina-olap` — Parquet/DuckDB, SSRM, MCP, and `fina-table`
 - `skills/fina-e2e-coordinator` — cross-repository verification
+
+## Schema directory
+
+The first reviewed tranche includes process, ETL, lambda-task, trade, pricing-request, job-status, risk-cell, P&L explanation, and storage-boundary contracts. See [`schema/README.md`](schema/README.md) for source provenance, review status, formatting rules, and the list of intentionally deferred schemas such as `ProductTerms`, `LifecycleState`, and `InstrumentModel`.
 
 The chapters intentionally contain operational knowledge and links, not vendored source code. Source evidence is drawn from `FinA` revision `7818a28` and the public sibling repositories available during this bootstrap. The `tradeac` checkout was unavailable without GitHub authentication and is therefore not treated as verified evidence.
 

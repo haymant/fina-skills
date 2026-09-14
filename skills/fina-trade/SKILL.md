@@ -26,3 +26,6 @@ Use when changing trade identity, registration, amendments, lifecycle events, in
 
 Keep product semantics in `fina-core`; keep pricing behavior in `fina-risk`.
 
+## Canonical schema
+
+Use [`schema/trade.schema.json`](../../schema/trade.schema.json) for the current trade contract. ProductTerms and lifecycle-state schemas remain pending explicit freezing.

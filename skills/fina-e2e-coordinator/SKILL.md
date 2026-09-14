@@ -20,5 +20,5 @@ Use when a task crosses scheduler, pricer/risk, trade, ETL, or OLAP boundaries.
 
 A valid pass proves the wiring, not merely terminal status. Require two real pricing calls, an amended durable trade, delivered subscription event, finished reprice, and OLAP output derived from reprice. Report the failed task, context keys excluding secrets, error, and whether the lifecycle event was published. Do not substitute mocks after a real integration failure.
 
-Read `references/lambda-task.schema.json` when validating task declarations and the scheduler chapter for process details.
+Read [`schema/lambda-task.schema.json`](../../schema/lambda-task.schema.json) when validating task declarations and the scheduler chapter for process details. The standalone schema directory is canonical; do not maintain a second embedded copy.
 

@@ -26,3 +26,6 @@ A kernel should represent state as small integer vectors, guards as predicated c
 
 Keep PV, currency, price, full sensitivity vector, P&L attribution, checksums, method, and provenance distinct. Consumers may choose different lanes; reconciliation comes from shared meaning and inputs, not identical engines.
 
+## Canonical schemas
+
+Use [`schema/pricing-request.schema.json`](../../schema/pricing-request.schema.json) for engine inputs; use [`schema/risk-cell.schema.json`](../../schema/risk-cell.schema.json), [`schema/pnl-explain.schema.json`](../../schema/pnl-explain.schema.json), and [`schema/job-status.schema.json`](../../schema/job-status.schema.json) for reviewed output contracts.

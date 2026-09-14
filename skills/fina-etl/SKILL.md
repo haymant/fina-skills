@@ -22,3 +22,6 @@ Use for two distinct lanes: low-latency street projection and high-volume legacy
 
 Use the existing Rust `run_pipelines` path for bulk benchmarks and Python projections for tiny request graphs. Never hide a semantic conversion in an OLAP query or pricing kernel.
 
+## Canonical schema
+
+Use [`schema/etl.schema.json`](../../schema/etl.schema.json) for pipeline declarations.

@@ -27,3 +27,6 @@ Read the repository’s `schema/fina-process.schema.json` and the existing sched
 
 Run the scheduler and wired process tests in `FinA`, then the coordinator E2E. Require exactly two real pricing calls, durable amended trade state, delivered amendment event, finished reprice, and OLAP rows derived from reprice output.
 
+## Canonical schemas
+
+Use [`schema/fina-process.schema.json`](../../schema/fina-process.schema.json) for process definitions and [`schema/etl.schema.json`](../../schema/etl.schema.json) for ETL pipeline declarations.
