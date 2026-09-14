@@ -5,24 +5,29 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+
 HERE = Path(__file__).resolve().parent
-REPO_ROOT = HERE.parents[3]
+REPO_ROOT = HERE.parents[2]
 FINA_ROOT = REPO_ROOT.parent / "FinA"
 RISK_ROOT = REPO_ROOT.parent / "fina-risk"
 TRADE_ROOT = REPO_ROOT.parent / "fina-trade"
 for path in (FINA_ROOT / "python", TRADE_ROOT, RISK_ROOT / "src"):
     sys.path.insert(0, str(path))
+sys.path.insert(0, str(RISK_ROOT / "cpp" / "build"))
 
 from fina_core.integrations import register_fina_handlers
 from fina_core.process_scheduler import SchedulerService
 from fina_core.process_scheduler import render_parameters
 from fina_risk import mcp
 from fina_trade import TradeRepository
+import fina_risk_cpp
 
 
 def unwrap(value: Any) -> dict[str, Any]:
@@ -67,6 +72,7 @@ def run(termsheet_path: Path, count: int, seed: int, paths: int) -> dict[str, An
 
     with tempfile.TemporaryDirectory(prefix="fina-fcn-etl-") as work:
         work_dir = Path(work)
+        native_cube: dict[str, Any] = {}
 
         def augment(thread: Any, runtime: SchedulerService) -> dict[str, Any]:
             etl_calls.append("run_etl_task:augment")
@@ -105,17 +111,51 @@ def run(termsheet_path: Path, count: int, seed: int, paths: int) -> dict[str, An
             pricing_calls.append("pricing_and_sensitivity")
             compile_result = runtime.result(thread.process_id, "compile")
             legacy = json.loads(Path(compile_result["legacy_termsheet_path"]).read_text(encoding="utf-8"))
-            result = call_tool(
-                "pricing_and_sensitivity",
-                {"request": legacy, "paths": paths, "seed": seed},
+            if not native_cube:
+                cube_path = work_dir / "daily-paths.bin"
+                try:
+                    subprocess.run(
+                        [
+                            sys.executable,
+                            str(RISK_ROOT / "scripts" / "generate_daily_paths.py"),
+                            str(compile_result["legacy_termsheet_path"]),
+                            str(cube_path),
+                            "--paths",
+                            str(paths),
+                            "--seed",
+                            str(seed),
+                        ],
+                        check=True,
+                        capture_output=True,
+                        text=True,
+                    )
+                except subprocess.CalledProcessError as exc:
+                    raise RuntimeError(f"daily path generation failed: {exc.stderr.strip()}") from exc
+                meta = json.loads(Path(str(cube_path) + ".meta.json").read_text(encoding="utf-8"))
+                native_cube.update(
+                    paths=np.fromfile(cube_path, dtype=np.float64).reshape(meta["paths"], meta["observations"], meta["underlyings"]),
+                    dates=np.asarray(meta["dates"], dtype=np.int32),
+                    calendar=meta["calendar"],
+                )
+            native = json.loads(
+                fina_risk_cpp.run_daily_termsheet(
+                    json.dumps(legacy), native_cube["paths"], native_cube["dates"], 0.01
+                )
             )
+            if native.get("engine") != "cpp_daily_termsheet_eki":
+                raise AssertionError(f"native C++ engine marker missing: {native.get('engine')!r}")
+            underlyings = legacy["Chunk"]["Jobs"][0]["commonData"]["dealData"]["instrument"]["underlyings"]
+            risk_rows = []
+            for underlying, value in zip(underlyings, native["relative_delta"]):
+                name = underlying if isinstance(underlying, str) else underlying.get("_id", underlying.get("name", str(underlying)))
+                risk_rows.append({"greek": "DELTA", "risk_factor_id": f"EQ:{name}:SPOT", "value": value})
             return {
                 "trade_id": thread.parameters.get("trade_id", trade_id),
                 "quote": {
-                    "PV": result["base"]["valuation"]["pv"],
-                    "PV_currency": result["base"]["valuation"].get("currency", "USD"),
-                    "RiskCube": result["risk_representation"],
-                    "mcp_tool": "pricing_and_sensitivity",
+                    "PV": native["pv"],
+                    "PV_currency": "USD",
+                    "RiskCube": {"long": risk_rows, "native": native},
+                    "pricing_engine": native["engine"],
                     "instrument_key": compile_result["instrument_key"],
                 },
                 "trigger": thread.parameters.get("event"),
@@ -171,6 +211,8 @@ def run(termsheet_path: Path, count: int, seed: int, paths: int) -> dict[str, An
         assert len(etl_calls) == 2, etl_calls
         assert etl_calls == ["run_etl_task:augment", "run_etl_task:compile"], etl_calls
         assert len(pricing_calls) == 2, pricing_calls
+        assert scheduler.result(process.id, "quote")["quote"]["pricing_engine"] == "cpp_daily_termsheet_eki"
+        assert scheduler.result(process.id, "reprice")["quote"]["pricing_engine"] == "cpp_daily_termsheet_eki"
         assert trade["status"] == "AMENDED", trade
         assert "trade.lifecycle.amended" in events, events
         assert scheduler.result(process.id, "reprice")
@@ -182,6 +224,7 @@ def run(termsheet_path: Path, count: int, seed: int, paths: int) -> dict[str, An
             "graph": [thread["name"] for thread in snapshot["threads"]],
             "etl_calls": etl_calls,
             "pricing_calls": len(pricing_calls),
+            "pricing_engine": scheduler.result(process.id, "quote")["quote"]["pricing_engine"],
             "compiled_instrument_key": scheduler.result(process.id, "compile")["instrument_key"],
             "trade_status": trade["status"],
             "events": events,
