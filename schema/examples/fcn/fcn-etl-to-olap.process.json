@@ -1,0 +1,118 @@
+{
+  "api_version": "fina/v1",
+  "kind": "FinaProcess",
+  "metadata": {
+    "name": "fcn-termsheet-etl-to-olap",
+    "version": "1"
+  },
+  "parameters": {
+    "termsheet_path": "${termsheet_path}",
+    "count": "${count}",
+    "seed": "${seed}",
+    "paths": "${paths}",
+    "correlation_id": "${correlation_id}",
+    "trade_id": "${trade_id}",
+    "instrument_id": "${instrument_id}"
+  },
+  "threads": [
+    {
+      "name": "augment",
+      "handler": "fina-etl.augment_termsheet",
+      "priority": 9,
+      "parameters": {
+        "context": {
+          "task": "augment_termsheet",
+          "source": "${termsheet_path}"
+        }
+      }
+    },
+    {
+      "name": "compile",
+      "handler": "fina-etl.compile_pricing_requests",
+      "depends_on": ["augment"],
+      "priority": 8,
+      "parameters": {
+        "context": {
+          "task": "compile_pricing_requests",
+          "dependency_names": ["augment"]
+        }
+      }
+    },
+    {
+      "name": "quote",
+      "handler": "fina-pricer.pricing_and_sensitivity",
+      "depends_on": ["compile"],
+      "parameters": {
+        "context": {
+          "task": "quote",
+          "dependency_names": ["compile"]
+        }
+      }
+    },
+    {
+      "name": "register_trade",
+      "handler": "fina-trade.register",
+      "depends_on": ["quote"],
+      "parameters": {
+        "trade": {
+          "trade_id": "${trade_id}",
+          "instrument_id": "${instrument_id}",
+          "product_type": "ELIFCN_KI",
+          "notional": 1000000.0,
+          "currency": "USD",
+          "status": "LIVE"
+        },
+        "context": {
+          "task": "register_trade",
+          "dependency_names": ["quote"]
+        }
+      }
+    },
+    {
+      "name": "amend",
+      "handler": "fina-trade.amend",
+      "depends_on": ["register_trade"],
+      "parameters": {
+        "trade_id": "${trade_id}",
+        "changes": {
+          "observation_date": "2026-10-14"
+        },
+        "reason": "termsheet-etl-e2e",
+        "context": {
+          "task": "amend",
+          "dependency_names": ["register_trade"]
+        }
+      }
+    },
+    {
+      "name": "reprice",
+      "handler": "fina-pricer.pricing_and_sensitivity",
+      "triggered_by": "trade.lifecycle.amended",
+      "depends_on": ["amend"],
+      "parameters": {
+        "context": {
+          "task": "reprice",
+          "event_from_subscription": true
+        }
+      }
+    },
+    {
+      "name": "olap",
+      "handler": "fina-olap.group_sensitivities",
+      "depends_on": ["reprice"],
+      "parameters": {
+        "context": {
+          "task": "olap",
+          "dependency_names": ["reprice"]
+        }
+      }
+    }
+  ],
+  "subscriptions": [
+    {
+      "topic": "trade.lifecycle.amended",
+      "handler": "fina-pricer.pricing_and_sensitivity",
+      "start_thread": "reprice"
+    }
+  ]
+}
