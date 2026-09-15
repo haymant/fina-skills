@@ -1,0 +1,12 @@
+{
+  "trade_id": "TRD-FCN-001",
+  "trade_status": "AMENDED",
+  "observation_state": "FIXING_PENDING",
+  "settlement_state": "NOT_DUE",
+  "version": 2,
+  "updated_at": "2026-10-14T16:00:00Z",
+  "active_fixing_date": "2026-10-14",
+  "knock_in_date": null,
+  "knock_out_date": null,
+  "last_event_id": "TRD-FCN-001:2"
+}

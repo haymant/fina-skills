@@ -1,0 +1,15 @@
+{
+  "transition_id": "fcn.live-to-amended.v1",
+  "from_trade_status": "LIVE",
+  "to_trade_status": "AMENDED",
+  "operation": "AMEND",
+  "event_topic": "trade.lifecycle.amended",
+  "reprice_required": true,
+  "idempotent": false,
+  "cashflow_effect": "NONE",
+  "preconditions": [
+    "trade exists",
+    "trade is not terminal",
+    "amendment has a correlation id"
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/fcn-lifecycle-event.schema.json",
+  "title": "FinA FCN Lifecycle Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "topic",
+    "trade_id",
+    "occurred_at",
+    "sequence",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "topic": {
+      "enum": [
+        "trade.lifecycle.registered",
+        "trade.lifecycle.amended",
+        "trade.lifecycle.cancelled",
+        "trade.lifecycle.observed",
+        "trade.lifecycle.corporate_event",
+        "trade.lifecycle.fixed",
+        "trade.lifecycle.knocked_in",
+        "trade.lifecycle.knocked_out",
+        "trade.lifecycle.coupon_determined",
+        "trade.lifecycle.expired",
+        "trade.lifecycle.exercised",
+        "trade.lifecycle.settled"
+      ]
+    },
+    "trade_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "correlation_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "occurred_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "payload": {
+      "type": "object"
+    }
+  }
+}

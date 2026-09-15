@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/fcn-lifecycle-state.schema.json",
+  "title": "FinA FCN Lifecycle State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "trade_id",
+    "trade_status",
+    "observation_state",
+    "settlement_state",
+    "version",
+    "updated_at"
+  ],
+  "properties": {
+    "trade_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "trade_status": {
+      "enum": [
+        "RFQ",
+        "QUOTED",
+        "LIVE",
+        "AMENDED",
+        "CANCELLED",
+        "MATURED",
+        "TERMINATED"
+      ]
+    },
+    "observation_state": {
+      "enum": [
+        "NOT_STARTED",
+        "FIXING_PENDING",
+        "FIXED",
+        "KNOCKED_IN",
+        "KNOCKED_OUT",
+        "COMPLETED"
+      ]
+    },
+    "settlement_state": {
+      "enum": [
+        "NOT_DUE",
+        "COUPON_DUE",
+        "PHYSICAL_DELIVERY_DUE",
+        "CASH_SETTLEMENT_DUE",
+        "SETTLED",
+        "WAIVED"
+      ]
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "updated_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "active_fixing_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "knock_in_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "knock_out_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "last_event_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "event_id": "TRD-FCN-001:2",
+  "topic": "trade.lifecycle.amended",
+  "trade_id": "TRD-FCN-001",
+  "correlation_id": "corr-fcn-001-amend-20261014",
+  "occurred_at": "2026-10-14T16:00:00Z",
+  "sequence": 2,
+  "payload": {
+    "reason": "termsheet-etl-e2e",
+    "changes": {
+      "observation_date": "2026-10-14"
+    },
+    "before": {
+      "status": "LIVE"
+    },
+    "after": {
+      "status": "AMENDED"
+    }
+  }
+}

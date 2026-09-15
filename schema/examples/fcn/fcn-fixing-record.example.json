@@ -1,0 +1,36 @@
+{
+  "fixing_id": "FIX-TRD-FCN-001-20261014",
+  "trade_id": "TRD-FCN-001",
+  "fixing_date": "2026-10-14",
+  "observation_type": "DAILY",
+  "underlyings": [
+    {
+      "identifier": "AAPL US",
+      "reference": 100.0,
+      "fixing": 102.5,
+      "performance": 1.025,
+      "knock_in_hit": false,
+      "knock_out_hit": false
+    },
+    {
+      "identifier": "MSFT US",
+      "reference": 100.0,
+      "fixing": 98.0,
+      "performance": 0.98,
+      "knock_in_hit": false,
+      "knock_out_hit": false
+    }
+  ],
+  "decision": {
+    "coupon_status": "ACCRUED",
+    "knock_status": "NONE",
+    "next_observation": "2026-10-15"
+  },
+  "source": {
+    "market_snapshot_id": "mkt-20261014-nyse-close",
+    "calendar": "NYSE",
+    "fixing_source": "generated_shared_path_cube"
+  },
+  "recorded_at": "2026-10-14T21:00:00Z",
+  "idempotency_key": "TRD-FCN-001:2026-10-14:DAILY"
+}

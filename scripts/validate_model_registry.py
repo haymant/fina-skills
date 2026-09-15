@@ -24,6 +24,11 @@ def validate_schema(instance: Any, schema_path: Path, label: str) -> None:
 
 
 def check_registry(path: Path, data: dict[str, Any]) -> None:
+    lifecycle = data["lifecycle"]
+    for field in ("state_schema", "event_schema", "transition_schema", "fixing_record_schema", "market_operation_schema"):
+        value = lifecycle.get(field)
+        if value and value != "pending-freeze" and not (SCHEMA_DIR / value).exists():
+            raise SystemExit(f"{path}: lifecycle.{field} does not resolve to schema/{value}")
     native = data["pricing"]["backends"].get("native")
     if data["status"] == "executable" and native is None:
         raise SystemExit(f"{path}: executable entries require pricing.backends.native")

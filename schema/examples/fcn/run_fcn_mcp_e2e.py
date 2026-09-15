@@ -81,8 +81,18 @@ def validate_registry() -> None:
     )
 
 
+def validate_lifecycle_fixtures() -> None:
+    subprocess.run(
+        [sys.executable, str(HERE / "verify_lifecycle.py")],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
 def run(termsheet_path: Path, count: int, seed: int, paths: int) -> dict[str, Any]:
     validate_registry()
+    validate_lifecycle_fixtures()
     scheduler = SchedulerService()
     trades = TradeRepository()
     etl_calls: list[str] = []
@@ -299,6 +309,7 @@ def main() -> int:
         "checks": {
             "process_schema_valid": True,
             "registry_valid": True,
+            "lifecycle_contracts_valid": True,
             "two_etl_calls": result["etl_calls"] == ["run_etl_task:augment", "run_etl_task:compile"],
             "native_quote": result["pricing_engine"] == "cpp_daily_termsheet_eki",
             "native_reprice": result["pricing_engine"] == "cpp_daily_termsheet_eki" and result["pricing_calls"] == 2,

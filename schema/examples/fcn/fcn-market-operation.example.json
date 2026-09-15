@@ -1,0 +1,16 @@
+{
+  "operation_id": "OP-FIX-TRD-FCN-001-20261014",
+  "operation": "RECORD_FIXING",
+  "trade_id": "TRD-FCN-001",
+  "as_of": "2026-10-14",
+  "idempotency_key": "TRD-FCN-001:2026-10-14:DAILY",
+  "actor": {
+    "type": "market-data",
+    "id": "nyse-close-loader"
+  },
+  "input": {
+    "fixing_record": "fcn-fixing-record.example.json"
+  },
+  "expected_state_version": 2,
+  "correlation_id": "corr-fcn-001-fixing-20261014"
+}

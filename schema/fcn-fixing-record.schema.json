@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/fcn-fixing-record.schema.json",
+  "title": "FinA FCN Fixing Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fixing_id",
+    "trade_id",
+    "fixing_date",
+    "observation_type",
+    "underlyings",
+    "decision",
+    "source",
+    "recorded_at"
+  ],
+  "properties": {
+    "fixing_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "trade_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "fixing_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "observation_type": {
+      "enum": [
+        "DAILY",
+        "PERIOD_END",
+        "FINAL"
+      ]
+    },
+    "underlyings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/underlyingFixing"
+      }
+    },
+    "decision": {
+      "$ref": "#/$defs/decision"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "market_snapshot_id",
+        "calendar",
+        "fixing_source"
+      ],
+      "properties": {
+        "market_snapshot_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "calendar": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fixing_source": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "recorded_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$defs": {
+    "underlyingFixing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identifier",
+        "reference",
+        "fixing",
+        "performance"
+      ],
+      "properties": {
+        "identifier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reference": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "fixing": {
+          "type": "number",
+          "minimum": 0
+        },
+        "performance": {
+          "type": "number"
+        },
+        "knock_in_hit": {
+          "type": "boolean"
+        },
+        "knock_out_hit": {
+          "type": "boolean"
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coupon_status",
+        "knock_status",
+        "next_observation"
+      ],
+      "properties": {
+        "coupon_status": {
+          "enum": [
+            "NOT_DUE",
+            "ACCRUED",
+            "NOT_ACCRUED",
+            "PAID"
+          ]
+        },
+        "knock_status": {
+          "enum": [
+            "NONE",
+            "KI",
+            "KO"
+          ]
+        },
+        "next_observation": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        }
+      }
+    }
+  }
+}

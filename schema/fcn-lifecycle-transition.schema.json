@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/fcn-lifecycle-transition.schema.json",
+  "title": "FinA FCN Lifecycle Transition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "transition_id",
+    "from_trade_status",
+    "to_trade_status",
+    "operation",
+    "event_topic",
+    "reprice_required",
+    "idempotent"
+  ],
+  "properties": {
+    "transition_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "from_trade_status": {
+      "enum": [
+        "RFQ",
+        "QUOTED",
+        "LIVE",
+        "AMENDED",
+        "CANCELLED",
+        "MATURED",
+        "TERMINATED"
+      ]
+    },
+    "to_trade_status": {
+      "enum": [
+        "RFQ",
+        "QUOTED",
+        "LIVE",
+        "AMENDED",
+        "CANCELLED",
+        "MATURED",
+        "TERMINATED"
+      ]
+    },
+    "operation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "event_topic": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(\\.[a-z0-9_-]+)+$"
+    },
+    "reprice_required": {
+      "type": "boolean"
+    },
+    "idempotent": {
+      "type": "boolean"
+    },
+    "cashflow_effect": {
+      "enum": [
+        "NONE",
+        "COUPON",
+        "KNOCK_SETTLEMENT",
+        "MATURITY_SETTLEMENT",
+        "PHYSICAL_DELIVERY"
+      ]
+    },
+    "preconditions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

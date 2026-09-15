@@ -23,6 +23,11 @@ The following existing schemas were copied from the source repositories and form
 | `storage-boundaries.schema.json` | `fina-risk/skills/fina-risk/schema/storage-boundaries.schema.json` @ `8884093` | reviewed: concrete storage contract |
 | `model-wiring.schema.json` | FinA skill-book Phase 2A contract | reviewed: registry governance contract |
 | `evidence-manifest.schema.json` | FinA skill-book Phase 2A contract | reviewed: executable E2E evidence contract |
+| `fcn-lifecycle-state.schema.json` | `fina-trade` status contract plus FCN observation/settlement state | reviewed: FCN lifecycle state contract |
+| `fcn-lifecycle-event.schema.json` | `fina-trade` in-memory event envelope plus FCN event topics | reviewed: FCN lifecycle event contract |
+| `fcn-lifecycle-transition.schema.json` | FinA skill-book Phase 2B contract | reviewed: FCN transition/replay contract |
+| `fcn-fixing-record.schema.json` | FinA skill-book Phase 2B contract | reviewed: FCN fixing provenance contract |
+| `fcn-market-operation.schema.json` | FinA skill-book Phase 2B contract | reviewed: FCN operational command contract |
 
 The source `FinA` revision for the first three schemas is `7818a28`. The `fina-trade` sources were reviewed at `3788c65`; the `fina-risk` sources were reviewed at `8884093`. `fina-olap` was inspected at `6b67553`, but no OLAP schema was promoted in this tranche because its current contract is implemented in Python and its report-version materialization schema is not yet frozen.
 
@@ -46,3 +51,5 @@ See [`examples/basic/README.md`](examples/basic/README.md) for one minimal fixtu
 See [`examples/fcn/README.md`](examples/fcn/README.md) for the `ELIFCN_KI` term-sheet sample and the real ETL-to-native-C++ scheduler E2E runner. Unlike the basic fixtures, the FCN example requires the local FinA runtime and compiled `fina_risk_cpp` module.
 
 Validate the model-wiring registry with `python scripts/validate_model_registry.py`. The native FCN E2E emits a machine-readable manifest (default `/tmp/fina-evidence/fcn/latest-run.json`) and validates it against `evidence-manifest.schema.json`; the manifest records source revisions, native engine identity, market configuration, lifecycle checks, and OLAP evidence.
+
+Validate the FCN lifecycle fixtures independently with `python schema/examples/fcn/verify_lifecycle.py`. These fixtures cover the implemented trade status/event envelope and the explicit FCN contracts for state, transitions, fixing records, and market operations.

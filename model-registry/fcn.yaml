@@ -14,7 +14,11 @@ pricing_request:
   schema: pricing-request.schema.json
   version: reviewed-v1
 lifecycle:
-  state_schema: pending-freeze
+  state_schema: fcn-lifecycle-state.schema.json
+  event_schema: fcn-lifecycle-event.schema.json
+  transition_schema: fcn-lifecycle-transition.schema.json
+  fixing_record_schema: fcn-fixing-record.schema.json
+  market_operation_schema: fcn-market-operation.schema.json
   events:
     - trade.lifecycle.registered
     - trade.lifecycle.amended
