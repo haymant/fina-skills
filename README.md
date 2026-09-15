@@ -15,12 +15,16 @@ The standalone [`schema/`](schema/) directory contains the reviewed JSON Schema 
 - `skills/fina-risk` — pricing, risk, and backend conformance
 - `skills/fina-olap` — Parquet/DuckDB, SSRM, MCP, and `fina-table`
 - `skills/fina-e2e-coordinator` — cross-repository verification
+- `skills/fina-product-development` — product-family delivery workflow and release gates
+- `model-registry` — versioned product-to-model/backend/risk/evidence wiring
 
 ## Schema directory
 
 The first reviewed tranche includes process, ETL, lambda-task, trade, pricing-request, job-status, risk-cell, P&L explanation, and storage-boundary contracts. See [`schema/README.md`](schema/README.md) for source provenance, review status, formatting rules, and the list of intentionally deferred schemas such as `ProductTerms`, `LifecycleState`, and `InstrumentModel`.
 
 The chapters intentionally contain operational knowledge and links, not vendored source code. Source evidence is drawn from `FinA` revision `7818a28` and the public sibling repositories available during this bootstrap. The `tradeac` checkout was unavailable without GitHub authentication and is therefore not treated as verified evidence.
+
+Product-family work starts with [`skills/fina-product-development/SKILL.md`](skills/fina-product-development/SKILL.md), then loads the closest [`model-registry/`](model-registry/) entry before changing semantic projections, pricing backends, lifecycle events, risk profiles, or E2E evidence.
 
 ## Maintenance
 

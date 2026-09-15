@@ -1,0 +1,92 @@
+registry: fina/model-wiring
+version: 1
+product_family: fcn
+aliases:
+  - ELI
+  - FCN
+  - ELIFCN_KI
+status: executable
+terms:
+  schema: ProductTerms
+  version: pending-freeze
+  source_fixture: schema/examples/fcn/termsheet1.fcn.sample.json
+pricing_request:
+  schema: pricing-request.schema.json
+  version: reviewed-v1
+lifecycle:
+  state_schema: pending-freeze
+  events:
+    - trade.lifecycle.registered
+    - trade.lifecycle.amended
+    - trade.lifecycle.fixed
+    - trade.lifecycle.knocked
+    - trade.lifecycle.expired
+    - trade.lifecycle.exercised
+market_data:
+  required:
+    - equity_spot
+    - equity_vol_surface
+    - dividend_curve
+    - discount_curve
+    - equity_equity_correlation
+    - fixing_calendar
+  calendar: NYSE
+  observation_style: daily
+  fixing_source: generated_shared_path_cube
+pricing:
+  logical_handler: fina-pricer.pricing_and_sensitivity
+  backends:
+    reference:
+      kind: python_reference
+      repository: fina-risk
+      module: fina_risk.daily_termsheet
+      callable: price_daily_termsheet
+      source_revision: 61351d4
+      allowed_for: oracle-conformance
+    native:
+      kind: native_cpp
+      repository: fina-risk
+      source_revision: 61351d4
+      module: fina_risk_cpp
+      callable: run_daily_termsheet
+      build_target: fina_risk_cpp
+      engine_marker: cpp_daily_termsheet_eki
+      required_for: production-evidence
+      fallback_allowed: false
+  path_count: 30000
+  seed: 1729
+  bump: 0.01
+  state_features:
+    - final_fixing_eki
+    - global_ko
+    - range_fixing_counts
+    - unpaid_fixing_memory
+    - payment_date_discounting
+risk_profiles:
+  quote:
+    measures: [PV]
+    method: native_cpp_daily_termsheet
+  eq-delta:
+    measures: [PV, EQ_DELTA]
+    method: central_bump_revalue
+    bump: 0.01
+    convention: relative_spot
+  full-trading:
+    measures: [PV, EQ_DELTA, EQ_GAMMA, EQ_VEGA, RHO, CORRELATION]
+    method: declared-per-measure
+    status: pending-complete-risk-profile
+evidence:
+  required_engine_marker: cpp_daily_termsheet_eki
+  parity_reference: fina-risk/benchmark/daily-termsheet-parity.md
+  e2e_command: python schema/examples/fcn/run_fcn_mcp_e2e.py --termsheet schema/examples/fcn/termsheet1.fcn.sample.json --count 1 --paths 128 --seed 42
+  checks:
+    - process_schema_valid
+    - two_etl_calls
+    - native_quote
+    - native_reprice
+    - amended_trade_persisted
+    - amendment_event_delivered
+    - olap_derived_from_reprice
+  tolerances:
+    pv_absolute: 1.0e-10
+    greek_absolute: 1.0e-8

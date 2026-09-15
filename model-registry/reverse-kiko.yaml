@@ -1,0 +1,77 @@
+registry: fina/model-wiring
+version: 1
+product_family: reverse-kiko
+aliases:
+  - KIKO
+  - Reverse KIKO
+status: design
+terms:
+  schema: ProductTerms
+  version: pending-freeze
+  feature_families:
+    - worst-of
+    - local_ko
+    - global_ko
+    - final_fixing_ki
+    - return_ratio
+    - ko_coupon
+pricing_request:
+  schema: pricing-request.schema.json
+  version: pending-product-projection
+lifecycle:
+  state_schema: pending-freeze
+  events:
+    - trade.lifecycle.registered
+    - trade.lifecycle.fixed
+    - trade.lifecycle.knocked
+    - trade.lifecycle.expired
+    - trade.lifecycle.exercised
+    - trade.lifecycle.unwound
+market_data:
+  required:
+    - equity_spot
+    - equity_vol_surface
+    - dividend_curve
+    - discount_curve
+    - equity_equity_correlation
+    - fixing_calendar
+  calendar: product-specific
+  observation_style: daily-or-periodic
+pricing:
+  logical_handler: fina-pricer.pricing_and_sensitivity
+  backends:
+    reference:
+      kind: python_reference
+      repository: fina-risk
+      callable: pending-reverse-kiko-oracle
+      allowed_for: conformance-only
+    native:
+      kind: native_cpp
+      repository: fina-risk
+      callable: pending-reverse-kiko-entrypoint
+      engine_marker: pending
+      required_for: production-evidence
+      fallback_allowed: false
+risk_profiles:
+  quote:
+    measures: [PV]
+    method: pending
+  full-trading:
+    measures: [PV, EQ_DELTA, EQ_GAMMA, EQ_VEGA, RHO, CORRELATION, DIVIDEND]
+    method: declared-per-measure
+    status: pending
+constraints:
+  - define local/global KO precedence
+  - define inclusive-exclusive barrier operators
+  - define KO rebate and return-ratio timing
+  - define KI maturity payoff and settlement
+  - define basket and FX rule support
+evidence:
+  status: pending
+  required_checks:
+    - product_terms_conformance
+    - barrier_boundary_fixtures
+    - local_global_ko_precedence
+    - lifecycle_cashflow_replay
+    - native_reference_parity
+    - fixing_to_settlement_e2e
