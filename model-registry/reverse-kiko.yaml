@@ -37,6 +37,7 @@ market_data:
     - fixing_calendar
   calendar: product-specific
   observation_style: daily-or-periodic
+  fixing_source: pending
 pricing:
   logical_handler: fina-pricer.pricing_and_sensitivity
   backends:
@@ -51,6 +52,7 @@ pricing:
       callable: pending-reverse-kiko-entrypoint
       engine_marker: pending
       required_for: production-evidence
+      allowed_for: production-evidence
       fallback_allowed: false
 risk_profiles:
   quote:

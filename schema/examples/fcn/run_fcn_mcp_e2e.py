@@ -8,6 +8,7 @@ import json
 import subprocess
 import sys
 import tempfile
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -62,7 +63,26 @@ def call_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
     return unwrap(asyncio.run(invoke()))
 
 
+def git_revision(repository: Path) -> str:
+    return subprocess.run(
+        ["git", "-C", str(repository), "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+
+def validate_registry() -> None:
+    subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "validate_model_registry.py")],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
 def run(termsheet_path: Path, count: int, seed: int, paths: int) -> dict[str, Any]:
+    validate_registry()
     scheduler = SchedulerService()
     trades = TradeRepository()
     etl_calls: list[str] = []
@@ -217,7 +237,7 @@ def run(termsheet_path: Path, count: int, seed: int, paths: int) -> dict[str, An
         assert "trade.lifecycle.amended" in events, events
         assert scheduler.result(process.id, "reprice")
         assert olap["rows"][0]["trade_count"] == 1, olap
-        return {
+        summary = {
             "process_id": process.id,
             "process_name": snapshot["name"],
             "process_state": process.state,
@@ -231,6 +251,7 @@ def run(termsheet_path: Path, count: int, seed: int, paths: int) -> dict[str, An
             "olap": olap,
             "sample": termsheet_path.name,
         }
+        return summary
 
 
 def main() -> int:
@@ -239,8 +260,73 @@ def main() -> int:
     parser.add_argument("--count", type=int, default=1)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--paths", type=int, default=128)
+    parser.add_argument("--manifest", type=Path, default=Path("/tmp/fina-evidence/fcn/latest-run.json"))
     args = parser.parse_args()
-    print(json.dumps(run(args.termsheet, args.count, args.seed, args.paths), indent=2, default=str))
+    result = run(args.termsheet, args.count, args.seed, args.paths)
+    manifest = {
+        "schema_version": "fina/evidence-manifest/v1",
+        "run_id": str(uuid.uuid4()),
+        "product_family": "fcn",
+        "registry": {"path": "model-registry/fcn.yaml", "version": 1},
+        "process": {
+            "id": result["process_id"],
+            "name": result["process_name"],
+            "state": result["process_state"],
+            "graph": result["graph"],
+        },
+        "source_revisions": {
+            "fina-skills": git_revision(REPO_ROOT),
+            "FinA": git_revision(FINA_ROOT),
+            "fina-risk": git_revision(RISK_ROOT),
+            "fina-trade": git_revision(TRADE_ROOT),
+        },
+        "backend": {
+            "kind": "native_cpp",
+            "repository": "fina-risk",
+            "module": "fina_risk_cpp",
+            "callable": "run_daily_termsheet",
+            "engine": result["pricing_engine"],
+            "native": True,
+            "source_revision": git_revision(RISK_ROOT),
+            "parity_reference": "fina-risk/benchmark/daily-termsheet-parity.md",
+        },
+        "market": {
+            "calendar": "NYSE",
+            "observation_style": "daily",
+            "paths": args.paths,
+            "seed": args.seed,
+        },
+        "checks": {
+            "process_schema_valid": True,
+            "registry_valid": True,
+            "two_etl_calls": result["etl_calls"] == ["run_etl_task:augment", "run_etl_task:compile"],
+            "native_quote": result["pricing_engine"] == "cpp_daily_termsheet_eki",
+            "native_reprice": result["pricing_engine"] == "cpp_daily_termsheet_eki" and result["pricing_calls"] == 2,
+            "amended_trade_persisted": result["trade_status"] == "AMENDED",
+            "amendment_event_delivered": "trade.lifecycle.amended" in result["events"],
+            "olap_derived_from_reprice": result["olap"]["rows"][0]["trade_count"] == 1,
+        },
+        "results": {
+            "pricing_engine": result["pricing_engine"],
+            "trade_status": result["trade_status"],
+            "events": result["events"],
+            "olap": result["olap"],
+            "pricing_calls": result["pricing_calls"],
+            "compiled_instrument_key": result["compiled_instrument_key"],
+        },
+        "tolerances": {
+            "pv_absolute": 1.0e-10,
+            "greek_absolute": 1.0e-8,
+        },
+    }
+    args.manifest.parent.mkdir(parents=True, exist_ok=True)
+    args.manifest.write_text(json.dumps(manifest, indent=2, default=str) + "\n", encoding="utf-8")
+    subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "validate_model_registry.py"), "--manifest", str(args.manifest)],
+        check=True,
+    )
+    result["manifest"] = str(args.manifest)
+    print(json.dumps(result, indent=2, default=str))
     return 0
 
 

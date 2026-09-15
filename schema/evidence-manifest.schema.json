@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/evidence-manifest.schema.json",
+  "title": "FinA Evidence Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "product_family",
+    "registry",
+    "process",
+    "source_revisions",
+    "backend",
+    "market",
+    "checks",
+    "results"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "product_family": {
+      "type": "string",
+      "minLength": 1
+    },
+    "registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "version"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "process": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "state",
+        "graph"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "state": {
+          "const": "FINISHED"
+        },
+        "graph": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "source_revisions": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{7,64}$"
+      }
+    },
+    "backend": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "repository",
+        "module",
+        "callable",
+        "engine",
+        "native"
+      ],
+      "properties": {
+        "kind": {
+          "const": "native_cpp"
+        },
+        "repository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "module": {
+          "type": "string",
+          "minLength": 1
+        },
+        "callable": {
+          "type": "string",
+          "minLength": 1
+        },
+        "engine": {
+          "type": "string",
+          "minLength": 1
+        },
+        "native": {
+          "const": true
+        },
+        "source_revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{7,64}$"
+        },
+        "parity_reference": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "market": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "calendar",
+        "paths",
+        "seed"
+      ],
+      "properties": {
+        "calendar": {
+          "type": "string",
+          "minLength": 1
+        },
+        "paths": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "seed": {
+          "type": "integer"
+        },
+        "observation_style": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "checks": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "const": true
+      }
+    },
+    "results": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "pricing_engine",
+        "trade_status",
+        "events",
+        "olap"
+      ],
+      "properties": {
+        "pricing_engine": {
+          "type": "string",
+          "minLength": 1
+        },
+        "trade_status": {
+          "type": "string",
+          "minLength": 1
+        },
+        "events": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "olap": {
+          "type": "object"
+        }
+      }
+    },
+    "tolerances": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0
+      }
+    }
+  }
+}

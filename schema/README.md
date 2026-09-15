@@ -21,6 +21,8 @@ The following existing schemas were copied from the source repositories and form
 | `risk-cell.schema.json` | `fina-risk/skills/fina-risk/schema/risk-cell.schema.json` @ `8884093` | reviewed: concrete risk output |
 | `pnl-explain.schema.json` | `fina-risk/skills/fina-risk/schema/pnl-explain.schema.json` @ `8884093` | reviewed: concrete P&L output |
 | `storage-boundaries.schema.json` | `fina-risk/skills/fina-risk/schema/storage-boundaries.schema.json` @ `8884093` | reviewed: concrete storage contract |
+| `model-wiring.schema.json` | FinA skill-book Phase 2A contract | reviewed: registry governance contract |
+| `evidence-manifest.schema.json` | FinA skill-book Phase 2A contract | reviewed: executable E2E evidence contract |
 
 The source `FinA` revision for the first three schemas is `7818a28`. The `fina-trade` sources were reviewed at `3788c65`; the `fina-risk` sources were reviewed at `8884093`. `fina-olap` was inspected at `6b67553`, but no OLAP schema was promoted in this tranche because its current contract is implemented in Python and its report-version materialization schema is not yet frozen.
 
@@ -41,4 +43,6 @@ When adding a schema:
 
 See [`examples/basic/README.md`](examples/basic/README.md) for one minimal fixture per reviewed schema and an independent verifier. Run `python schema/examples/basic/verify_examples.py --demo` from the repository root; validation uses only the local schemas and the `jsonschema` package, without FinA services, MCP, databases, cloud credentials, or network access.
 
-See [`examples/fcn/README.md`](examples/fcn/README.md) for the `ELIFCN_KI` term-sheet sample and the real Python-to-MCP scheduler E2E runner. Unlike the basic fixtures, the FCN example requires the local FinA runtime and executes `pricing_and_sensitivity` twice.
+See [`examples/fcn/README.md`](examples/fcn/README.md) for the `ELIFCN_KI` term-sheet sample and the real ETL-to-native-C++ scheduler E2E runner. Unlike the basic fixtures, the FCN example requires the local FinA runtime and compiled `fina_risk_cpp` module.
+
+Validate the model-wiring registry with `python scripts/validate_model_registry.py`. The native FCN E2E emits a machine-readable manifest (default `/tmp/fina-evidence/fcn/latest-run.json`) and validates it against `evidence-manifest.schema.json`; the manifest records source revisions, native engine identity, market configuration, lifecycle checks, and OLAP evidence.
