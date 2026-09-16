@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/fcn-native-pricing-result.schema.json",
+  "title": "FCN Native Daily-Term-Sheet Pricing Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "engine",
+    "aad_engine",
+    "paths",
+    "daily_observations",
+    "underlyings",
+    "pv",
+    "put_price",
+    "funding",
+    "coupon_pv",
+    "relative_delta",
+    "relative_gamma",
+    "ki_monitoring",
+    "ki_probability",
+    "ko_probability",
+    "coupon_fixings",
+    "memory_carry"
+  ],
+  "properties": {
+    "engine": {"const": "cpp_daily_termsheet_eki"},
+    "aad_engine": {"type": "string", "minLength": 1},
+    "paths": {"type": "integer", "minimum": 1},
+    "daily_observations": {"type": "integer", "minimum": 1},
+    "underlyings": {"type": "integer", "minimum": 1},
+    "pv": {"type": "number"},
+    "put_price": {"type": "number"},
+    "funding": {"type": "number"},
+    "coupon_pv": {"type": "number"},
+    "relative_delta": {"type": "array", "items": {"type": "number"}},
+    "relative_gamma": {"type": "array", "items": {"type": "number"}},
+    "ki_monitoring": {"const": "EKI"},
+    "ki_probability": {"type": "number", "minimum": 0, "maximum": 1},
+    "ko_probability": {"type": "number", "minimum": 0, "maximum": 1},
+    "coupon_fixings": {"type": "array", "items": {"type": "number", "minimum": 0}},
+    "memory_carry": {"type": "array", "items": {"type": "number", "minimum": 0}}
+  }
+}

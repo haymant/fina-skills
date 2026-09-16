@@ -7,12 +7,18 @@ aliases:
   - ELIFCN_KI
 status: executable
 terms:
-  schema: ProductTerms
+  schema: fcn-terms-projection.schema.json
   version: pending-freeze
-  source_fixture: schema/examples/fcn/termsheet1.fcn.sample.json
+  source_schema: fcn-legacy-termsheet.schema.json
+  source_fixture: schema/examples/fcn/source/termsheet1.fcn.sample.json
+  projection_fixture: schema/examples/fcn/terms/fcn-terms-projection.example.json
 pricing_request:
   schema: pricing-request.schema.json
   version: reviewed-v1
+  fixture: schema/examples/fcn/pricing/pricing-request.example.json
+  result_schema: fcn-native-pricing-result.schema.json
+  quote_fixture: schema/examples/fcn/pricing/native-quote-result.example.json
+  reprice_fixture: schema/examples/fcn/pricing/native-reprice-result.example.json
 lifecycle:
   state_schema: fcn-lifecycle-state.schema.json
   event_schema: fcn-lifecycle-event.schema.json
@@ -84,9 +90,10 @@ evidence:
   status: verified
   required_engine_marker: cpp_daily_termsheet_eki
   parity_reference: fina-risk/benchmark/daily-termsheet-parity.md
-  e2e_command: python schema/examples/fcn/run_fcn_mcp_e2e.py --termsheet schema/examples/fcn/termsheet1.fcn.sample.json --count 1 --paths 128 --seed 42
+  e2e_command: python schema/examples/fcn/run_fcn_mcp_e2e.py --termsheet schema/examples/fcn/source/termsheet1.fcn.sample.json --count 1 --paths 128 --seed 42 --artifacts-dir schema/examples/fcn/pricing
   checks:
     - process_schema_valid
+    - lifecycle_contracts_valid
     - two_etl_calls
     - native_quote
     - native_reprice

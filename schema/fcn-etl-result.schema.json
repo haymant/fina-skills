@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/fcn-etl-result.schema.json",
+  "title": "FCN ETL Result",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["status", "mode", "count"],
+  "properties": {
+    "status": {"const": "ok"},
+    "mode": {"enum": ["augment", "compile"]},
+    "count": {"type": "integer", "minimum": 1},
+    "instruments": {"type": "array", "minItems": 1},
+    "requests": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "description": "Each request is validated independently against pricing-request.schema.json."
+      }
+    }
+  }
+}

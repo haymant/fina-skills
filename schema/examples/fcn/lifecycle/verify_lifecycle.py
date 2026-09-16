@@ -20,7 +20,7 @@ CASES = {
 def main() -> int:
     for example_name, schema_name in CASES.items():
         example = json.loads((HERE / example_name).read_text(encoding="utf-8"))
-        schema = json.loads((HERE.parents[2] / "schema" / schema_name).read_text(encoding="utf-8"))
+        schema = json.loads((HERE.parents[2] / schema_name).read_text(encoding="utf-8"))
         Draft202012Validator(schema, format_checker=FormatChecker()).validate(example)
         print(f"PASS {schema_name} <- {example_name}")
     return 0

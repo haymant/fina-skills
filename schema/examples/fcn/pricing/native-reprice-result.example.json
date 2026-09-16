@@ -1,0 +1,36 @@
+{
+  "aad_engine": "disabled",
+  "coupon_fixings": [
+    21.0,
+    23.0,
+    19.0,
+    23.0,
+    19.0
+  ],
+  "coupon_pv": 0.1859171198608385,
+  "daily_observations": 106,
+  "engine": "cpp_daily_termsheet_eki",
+  "funding": 0.9845438153506495,
+  "ki_monitoring": "EKI",
+  "ki_probability": 0.1171875,
+  "ko_probability": 0.3984375,
+  "memory_carry": [
+    0.0,
+    0.0,
+    0.515625,
+    0.0,
+    0.0
+  ],
+  "paths": 128,
+  "put_price": 0.01987319876236359,
+  "pv": 1.1505877364491244,
+  "relative_delta": [
+    -0.2663568573392672,
+    -0.4953156202370135
+  ],
+  "relative_gamma": [
+    -3.230956170208188,
+    -60.29869642837138
+  ],
+  "underlyings": 2
+}

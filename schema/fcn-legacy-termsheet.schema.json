@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/fcn-legacy-termsheet.schema.json",
+  "title": "Legacy FCN Term Sheet Request",
+  "description": "Source-boundary contract for the legacy fina-risk Chunk/Jobs request. This is not ProductTerms and is intentionally permissive inside marketData and dealData while the legacy contract remains upstream-owned.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Chunk"
+  ],
+  "properties": {
+    "Chunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "Jobs",
+        "numberJobs"
+      ],
+      "properties": {
+        "finaRefChunkID": {
+          "type": ["string", "integer"]
+        },
+        "priority": {
+          "type": ["string", "integer"]
+        },
+        "finaRefEnv": {
+          "type": "string"
+        },
+        "finaRefHostname": {
+          "type": "string"
+        },
+        "finaRefNPID": {
+          "type": ["string", "integer"]
+        },
+        "finaRefUserID": {
+          "type": "string"
+        },
+        "libVersion": {
+          "type": ["string", "number"]
+        },
+        "modelVersion": {
+          "type": ["string", "number"]
+        },
+        "numberJobs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "Jobs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/job"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "job": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "finaRefJobID",
+        "commonData"
+      ],
+      "properties": {
+        "finaRefJobID": {
+          "type": ["string", "integer"]
+        },
+        "commonDataSize": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "numberTasks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "commonData": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "marketData",
+            "dealData"
+          ],
+          "properties": {
+            "marketData": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "dealData": {
+              "type": "object",
+              "additionalProperties": true,
+              "required": [
+                "instrument",
+                "productName",
+                "notional",
+                "paymentCurrency"
+              ],
+              "properties": {
+                "instrument": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "productName": {
+                  "type": "string"
+                },
+                "notional": {
+                  "type": "number"
+                },
+                "paymentCurrency": {
+                  "type": "string",
+                  "minLength": 3
+                },
+                "KIKOSelect": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "RGACCDate": {
+                  "type": ["array", "object"]
+                },
+                "RGACCLKO": {
+                  "type": ["array", "object"]
+                },
+                "globalKOStar": {
+                  "type": ["array", "object"]
+                },
+                "knockInStar": {
+                  "type": ["array", "object"]
+                }
+              }
+            }
+          }
+        },
+        "Tasks": {
+          "type": "array"
+        }
+      }
+    }
+  }
+}

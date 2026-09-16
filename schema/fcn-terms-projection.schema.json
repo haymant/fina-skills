@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/fcn-terms-projection.schema.json",
+  "title": "FCN Terms Projection",
+  "description": "Stable example-level semantic projection between legacy FCN input and the engine-facing pricing request. This is a migration contract, not the final shared ProductTerms schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "product_family",
+    "product_type",
+    "source_ref",
+    "legs",
+    "economics",
+    "schedule",
+    "features",
+    "settlement"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "fina/fcn-terms-projection/v1"
+    },
+    "product_family": {
+      "const": "fcn"
+    },
+    "product_type": {
+      "const": "ELIFCN_KI"
+    },
+    "source_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fixture", "job_ids"],
+      "properties": {
+        "fixture": {"type": "string", "minLength": 1},
+        "job_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": ["string", "integer"]}
+        }
+      }
+    },
+    "legs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["leg_id", "name", "role", "notional", "multiplier"],
+        "properties": {
+          "leg_id": {"type": ["string", "integer"]},
+          "name": {"type": "string", "minLength": 1},
+          "role": {"enum": ["funding", "coupon", "ki_put", "custom"]},
+          "notional": {"type": "number", "exclusiveMinimum": 0},
+          "multiplier": {"type": "number"}
+        }
+      }
+    },
+    "economics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currency", "notional", "strike", "knock_in_barrier", "maturity_date"],
+      "properties": {
+        "currency": {"type": "string", "minLength": 3},
+        "notional": {"type": "number", "exclusiveMinimum": 0},
+        "strike": {"type": "number", "exclusiveMinimum": 0},
+        "knock_in_barrier": {"type": "number", "exclusiveMinimum": 0},
+        "maturity_date": {"type": "string", "format": "date"},
+        "coupon_rate": {"type": "number"}
+      }
+    },
+    "schedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evaluation_date", "last_fixing_date", "observation_frequency", "calendar"],
+      "properties": {
+        "evaluation_date": {"type": "string", "format": "date"},
+        "last_fixing_date": {"type": "string", "format": "date"},
+        "observation_frequency": {"enum": ["daily", "business_daily", "periodic"]},
+        "calendar": {"type": "string", "minLength": 1}
+      }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["final_fixing_eki", "physical_delivery"],
+      "properties": {
+        "final_fixing_eki": {"type": "boolean"},
+        "physical_delivery": {"type": "boolean"},
+        "worst_of": {"type": "boolean"},
+        "memory_coupon": {"type": "boolean"}
+      }
+    },
+    "settlement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["payment_currency", "delivery_type"],
+      "properties": {
+        "payment_currency": {"type": "string", "minLength": 3},
+        "delivery_type": {"enum": ["cash", "physical", "cash_or_physical"]}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

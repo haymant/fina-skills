@@ -28,6 +28,10 @@ The following existing schemas were copied from the source repositories and form
 | `fcn-lifecycle-transition.schema.json` | FinA skill-book Phase 2B contract | reviewed: FCN transition/replay contract |
 | `fcn-fixing-record.schema.json` | FinA skill-book Phase 2B contract | reviewed: FCN fixing provenance contract |
 | `fcn-market-operation.schema.json` | FinA skill-book Phase 2B contract | reviewed: FCN operational command contract |
+| `fcn-legacy-termsheet.schema.json` | `fina-risk` legacy `Chunk/Jobs` fixture boundary | reviewed: source-boundary contract |
+| `fcn-terms-projection.schema.json` | FinA skill-book example-level migration contract | provisional: semantic bridge pending ProductTerms freeze |
+| `fcn-etl-result.schema.json` | `fina-risk` `run_etl_task` output shape | reviewed: captured ETL result contract |
+| `fcn-native-pricing-result.schema.json` | `fina-risk` native daily-term-sheet output | reviewed: captured native result contract |
 
 The source `FinA` revision for the first three schemas is `7818a28`. The `fina-trade` sources were reviewed at `3788c65`; the `fina-risk` sources were reviewed at `8884093`. `fina-olap` was inspected at `6b67553`, but no OLAP schema was promoted in this tranche because its current contract is implemented in Python and its report-version materialization schema is not yet frozen.
 
@@ -52,4 +56,6 @@ See [`examples/fcn/README.md`](examples/fcn/README.md) for the `ELIFCN_KI` term-
 
 Validate the model-wiring registry with `python scripts/validate_model_registry.py`. The native FCN E2E emits a machine-readable manifest (default `/tmp/fina-evidence/fcn/latest-run.json`) and validates it against `evidence-manifest.schema.json`; the manifest records source revisions, native engine identity, market configuration, lifecycle checks, and OLAP evidence.
 
-Validate the FCN lifecycle fixtures independently with `python schema/examples/fcn/verify_lifecycle.py`. These fixtures cover the implemented trade status/event envelope and the explicit FCN contracts for state, transitions, fixing records, and market operations.
+Validate the FCN lifecycle fixtures independently with `python schema/examples/fcn/lifecycle/verify_lifecycle.py`. These fixtures cover the implemented trade status/event envelope and the explicit FCN contracts for state, transitions, fixing records, and market operations.
+
+Validate the complete offline FCN chain with `python schema/examples/fcn/verify_fcn_examples.py`. It checks the legacy source, semantic projection, captured ETL outputs, compiled pricing request, native quote/reprice results, and `FinaProcess` definition as separate contracts.

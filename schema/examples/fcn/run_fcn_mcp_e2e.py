@@ -83,16 +83,18 @@ def validate_registry() -> None:
 
 def validate_lifecycle_fixtures() -> None:
     subprocess.run(
-        [sys.executable, str(HERE / "verify_lifecycle.py")],
+        [sys.executable, str(HERE / "lifecycle" / "verify_lifecycle.py")],
         check=True,
         capture_output=True,
         text=True,
     )
 
 
-def run(termsheet_path: Path, count: int, seed: int, paths: int) -> dict[str, Any]:
+def run(termsheet_path: Path, count: int, seed: int, paths: int, artifacts_dir: Path | None = None) -> dict[str, Any]:
     validate_registry()
     validate_lifecycle_fixtures()
+    pricing_artifacts_dir = artifacts_dir
+    etl_artifacts_dir = artifacts_dir.parent / "etl" if artifacts_dir and artifacts_dir.name == "pricing" else artifacts_dir
     scheduler = SchedulerService()
     trades = TradeRepository()
     etl_calls: list[str] = []
@@ -113,6 +115,9 @@ def run(termsheet_path: Path, count: int, seed: int, paths: int) -> dict[str, An
             variants = result.get("instruments", [])
             if len(variants) != count:
                 raise AssertionError(f"ETL augment returned {len(variants)} variants, expected {count}")
+            if etl_artifacts_dir:
+                etl_artifacts_dir.mkdir(parents=True, exist_ok=True)
+                (etl_artifacts_dir / "augment-result.example.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
             return {"status": "ok", "mode": "augment", "count": len(variants), "variants": variants}
 
         def compile_requests(thread: Any, runtime: SchedulerService) -> dict[str, Any]:
@@ -128,6 +133,12 @@ def run(termsheet_path: Path, count: int, seed: int, paths: int) -> dict[str, An
             requests = result.get("requests", [])
             if len(requests) != 1:
                 raise AssertionError(f"ETL compile returned {len(requests)} requests")
+            if etl_artifacts_dir:
+                etl_artifacts_dir.mkdir(parents=True, exist_ok=True)
+                (etl_artifacts_dir / "compile-result.example.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+            if pricing_artifacts_dir:
+                pricing_artifacts_dir.mkdir(parents=True, exist_ok=True)
+                (pricing_artifacts_dir / "pricing-request.example.json").write_text(json.dumps(requests[0], indent=2) + "\n", encoding="utf-8")
             return {
                 "status": "ok",
                 "mode": "compile",
@@ -174,6 +185,10 @@ def run(termsheet_path: Path, count: int, seed: int, paths: int) -> dict[str, An
             )
             if native.get("engine") != "cpp_daily_termsheet_eki":
                 raise AssertionError(f"native C++ engine marker missing: {native.get('engine')!r}")
+            if pricing_artifacts_dir:
+                pricing_artifacts_dir.mkdir(parents=True, exist_ok=True)
+                filename = "native-quote-result.example.json" if not pricing_calls or len(pricing_calls) == 1 else "native-reprice-result.example.json"
+                (pricing_artifacts_dir / filename).write_text(json.dumps(native, indent=2) + "\n", encoding="utf-8")
             underlyings = legacy["Chunk"]["Jobs"][0]["commonData"]["dealData"]["instrument"]["underlyings"]
             risk_rows = []
             for underlying, value in zip(underlyings, native["relative_delta"]):
@@ -217,7 +232,7 @@ def run(termsheet_path: Path, count: int, seed: int, paths: int) -> dict[str, An
         scheduler.register_handler("fina-etl.augment_termsheet", augment)
         scheduler.register_handler("fina-etl.compile_pricing_requests", compile_requests)
 
-        definition = json.loads((HERE / "fcn-etl-to-olap.process.json").read_text(encoding="utf-8"))
+        definition = json.loads((HERE / "process" / "fcn-etl-to-olap.process.json").read_text(encoding="utf-8"))
         definition = render_parameters(
             definition,
             {
@@ -266,13 +281,14 @@ def run(termsheet_path: Path, count: int, seed: int, paths: int) -> dict[str, An
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--termsheet", type=Path, default=HERE / "termsheet1.fcn.sample.json")
+    parser.add_argument("--termsheet", type=Path, default=HERE / "source" / "termsheet1.fcn.sample.json")
     parser.add_argument("--count", type=int, default=1)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--paths", type=int, default=128)
     parser.add_argument("--manifest", type=Path, default=Path("/tmp/fina-evidence/fcn/latest-run.json"))
+    parser.add_argument("--artifacts-dir", type=Path, default=None)
     args = parser.parse_args()
-    result = run(args.termsheet, args.count, args.seed, args.paths)
+    result = run(args.termsheet, args.count, args.seed, args.paths, args.artifacts_dir)
     manifest = {
         "schema_version": "fina/evidence-manifest/v1",
         "run_id": str(uuid.uuid4()),

@@ -1,51 +1,75 @@
-# FCN MCP E2E example
+# FCN Example: Source to Product to Process to Evidence
 
-This example uses the `ELIFCN_KI` sample instrument from `fina-risk/skills/fina-risk/refs/termsheet1.md.json` and executes the real local ETL/MCP plus native C++ daily-term-sheet path. The process definition is [`fcn-etl-to-olap.process.json`](fcn-etl-to-olap.process.json) and conforms to the standalone `fina-process.schema.json`.
-
-## What it proves
-
-The runner starts from the copied legacy term sheet and executes both ETL stages through the real `run_etl_task` MCP tool before pricing. The resulting scheduler graph is:
+This example is intentionally split into five boundaries, following the Murex product-development paradigm without pretending that `FinaProcess` is the product definition.
 
 ```text
-augment → compile → quote → register_trade → amend
-                                      ↓ trade.lifecycle.amended
-                                  reprice → OLAP grouping
+legacy term sheet
+  → semantic terms projection
+  → compiled pricing request
+  → native pricing result
+  → executable FinaProcess
+  → lifecycle and OLAP evidence
 ```
 
-The verification requires a schema-valid process, a valid `model-registry/fcn.yaml`, two real MCP ETL calls, two native C++ pricing calls marked `cpp_daily_termsheet_eki`, durable amended trade state, an amendment lifecycle event, a finished reprice thread, and OLAP rows derived from the native reprice result. It is not a JSON-schema-only check.
+## Directory map
 
-## Run
+| Directory | Role | Contract |
+|---|---|---|
+| [`source/`](source/) | Legacy `Chunk → Jobs → commonData` input copied from `fina-risk` | [`schema/fcn-legacy-termsheet.schema.json`](../../fcn-legacy-termsheet.schema.json) |
+| [`terms/`](terms/) | Explicit semantic projection used to explain product meaning | [`schema/fcn-terms-projection.schema.json`](../../fcn-terms-projection.schema.json) |
+| [`etl/`](etl/) | Real MCP `augment` and `compile` outputs captured from the E2E | [`schema/fcn-etl-result.schema.json`](../../fcn-etl-result.schema.json) |
+| [`pricing/`](pricing/) | Compiled engine request and native quote/reprice payloads | [`schema/pricing-request.schema.json`](../../pricing-request.schema.json), [`schema/fcn-native-pricing-result.schema.json`](../../fcn-native-pricing-result.schema.json) |
+| [`process/`](process/) | Executable scheduler graph | [`schema/fina-process.schema.json`](../../fina-process.schema.json) |
+| [`lifecycle/`](lifecycle/) | State, event, transition, fixing, and operation contracts | The five `fcn-*.schema.json` lifecycle schemas |
+| [`evidence/`](evidence/) | Human-readable run/evidence notes | Runtime manifest is written outside the repository by default |
 
-From the repository root, after installing the local FinA packages and their dependencies:
+## What the sample is—and is not
 
-Build the native `fina-risk` lane first:
+[`source/termsheet1.fcn.sample.json`](source/termsheet1.fcn.sample.json) is a **legacy pricing-engine source fixture**. It conforms to `fcn-legacy-termsheet.schema.json`; it is not a `ProductTerms` object and it is not a `PricingRequest`.
+
+[`terms/fcn-terms-projection.example.json`](terms/fcn-terms-projection.example.json) is the explicit semantic bridge. It documents the product family, legs, economics, schedule, features, settlement, and source job references. It is a migration/example contract pending final shared `ProductTerms` ownership and version freeze.
+
+[`pricing/pricing-request.example.json`](pricing/pricing-request.example.json) is the actual request captured from the real `run_etl_task(mode="compile")` call. It validates against the canonical `schema/pricing-request.schema.json`.
+
+The native result fixtures are captured from the compiled `fina_risk_cpp.run_daily_termsheet` call. Both quote and reprice carry the engine marker `cpp_daily_termsheet_eki` and validate against `fcn-native-pricing-result.schema.json`.
+
+## FinaProcess in the Murex-style picture
+
+Murex separates product configuration from the executable delivery/runtime wiring: product economics and feature blocks define what the product means; model/GMP configuration defines how it is valued; operational workflows define how it is fixed, settled, and supported.
+
+FinA should preserve the same separation:
+
+| FinA artifact | Murex-style role | Question answered |
+|---|---|---|
+| Terms projection and eventual `ProductTerms` | Product definition / feature configuration | What is the FCN payoff and its supported constraints? |
+| `model-registry/fcn.yaml` | Product → model → risk → operations dictionary | Which model, backend, profiles, calendars, and evidence gates apply? |
+| `pricing-request.example.json` | C++/model mapping DTO | What exact typed input reaches the pricing engine? |
+| `process/fcn-etl-to-olap.process.json` | Executable operational recipe | In what dependency/event order do ETL, quote, trade, reprice, and OLAP run? |
+| Lifecycle schemas | Market-operation and settlement contracts | What states, fixing records, events, and operations are valid? |
+| Evidence manifest | Fixed-point/UAT/release evidence | What proves the configured product and process actually worked? |
+
+`FinaProcess` is therefore **not** the canonical product model and should not contain the full payoff definition. It is the executable orchestration layer that consumes typed terms/pricing contracts and starts the right handlers in the right dependency and event order. One product may have multiple processes: interactive quote, booking, fixing-day operation, EOD risk, and expiry/settlement.
+
+## Run and verify
+
+The offline contract chain can be checked without services:
 
 ```bash
-cmake -S ../fina-risk/cpp -B ../fina-risk/cpp/build -DCMAKE_BUILD_TYPE=Release
-cmake --build ../fina-risk/cpp/build -j2
+python schema/examples/fcn/verify_fcn_examples.py
+python schema/examples/fcn/lifecycle/verify_lifecycle.py
 ```
 
+The real service-backed E2E is:
+
 ```bash
+PYTHONPATH=../FinA/python:../fina-risk/src:../fina-trade:../fina-risk/cpp/build \
 python schema/examples/fcn/run_fcn_mcp_e2e.py \
-  --termsheet schema/examples/fcn/termsheet1.fcn.sample.json \
+  --termsheet schema/examples/fcn/source/termsheet1.fcn.sample.json \
   --count 1 \
   --paths 128 \
+  --seed 42 \
+  --artifacts-dir schema/examples/fcn/pricing \
   --manifest /tmp/fina-evidence/fcn/latest-run.json
 ```
 
-The runner imports the local `fina-risk` FastMCP object and calls `mcp.call_tool("run_etl_task", ...)` for augmentation and compilation. It then builds the latest `fina-risk/cpp` pybind target and calls `fina_risk_cpp.run_daily_termsheet(...)` for both quote and reprice. The runner asserts the `cpp_daily_termsheet_eki` engine marker and does not fall back to Python pricing.
-
-The C++ daily engine consumes the canonical shared weekday/NYSE path cube generated by `fina-risk/scripts/generate_daily_paths.py`; its PV, relative Greeks, KI/KO rates, fixing counts, and memory carry are preserved inside the quote’s native evidence payload.
-The manifest is validated against [`schema/evidence-manifest.schema.json`](../../evidence-manifest.schema.json) and includes the exact source revisions for `FinA`, `fina-risk`, `fina-trade`, and `fina-skills`.
-
-The lifecycle contract fixtures are checked independently with:
-
-```bash
-python schema/examples/fcn/verify_lifecycle.py
-```
-
-They define the current `fina-trade` statuses and event envelope, plus FCN-specific observation state, fixing provenance, idempotent market-operation inputs, and replayable transition rules. The schemas describe the contract surface; they do not claim that every fixing, knock, exercise, or settlement handler is already implemented in `fina-trade`.
-
-The sample is copied from `fina-risk` revision `979fe0b` at the time this example was added. The source has three jobs; the example uses the full file so the tool exercises its native multi-job handling.
-
-The native C++ evidence in the current run was built from `fina-risk` revision `979fe0b` and reported `engine: cpp_daily_termsheet_eki`.
+The runner validates the registry and lifecycle fixtures before creating the process. It captures the real ETL and native pricing payloads, then validates the evidence manifest after the process finishes.

@@ -1,0 +1,47 @@
+{
+  "schema_version": "fina/fcn-terms-projection/v1",
+  "product_family": "fcn",
+  "product_type": "ELIFCN_KI",
+  "source_ref": {
+    "fixture": "../source/termsheet1.fcn.sample.json",
+    "job_ids": [0, 1, 2]
+  },
+  "legs": [
+    {"leg_id": 1, "name": "PUT", "role": "ki_put", "notional": 50000.0, "multiplier": -1.0},
+    {"leg_id": 3, "name": "FUNDING", "role": "funding", "notional": 50000.0, "multiplier": 1.0},
+    {"leg_id": 2, "name": "COUPON", "role": "coupon", "notional": 50000.0, "multiplier": 1.0}
+  ],
+  "economics": {
+    "currency": "USD",
+    "notional": 50000.0,
+    "strike": 0.78,
+    "knock_in_barrier": 0.70,
+    "maturity_date": "2027-02-03",
+    "coupon_rate": 0.00713
+  },
+  "schedule": {
+    "evaluation_date": "2026-08-21",
+    "last_fixing_date": "2026-08-21",
+    "observation_frequency": "daily",
+    "calendar": "NYSE"
+  },
+  "features": {
+    "final_fixing_eki": true,
+    "physical_delivery": true,
+    "worst_of": true,
+    "memory_coupon": true
+  },
+  "settlement": {
+    "payment_currency": "USD",
+    "delivery_type": "physical"
+  },
+  "provenance": {
+    "legacy_product_name": "ELIFCN",
+    "legacy_product_template": "ELIFCN_KI",
+    "legacy_initial_fixing_date": "2026-04-24",
+    "underlyings": ["ADBE UW", "AMZN UW"],
+    "reference_prices": [239.97, 260.0],
+    "knock_in_type": "EKI",
+    "source_contract": "fcn-legacy-termsheet.schema.json"
+  }
+}
