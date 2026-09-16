@@ -24,6 +24,15 @@ def validate_schema(instance: Any, schema_path: Path, label: str) -> None:
 
 
 def check_registry(path: Path, data: dict[str, Any]) -> None:
+    for section_name in ("terms", "pricing_request"):
+        section = data[section_name]
+        for field in ("source_fixture", "projection_fixture", "fixture", "quote_fixture", "reprice_fixture"):
+            value = section.get(field)
+            if value and not (ROOT / value).exists():
+                raise SystemExit(f"{path}: {section_name}.{field} does not exist: {value}")
+        schema_name = section.get("source_schema") or section.get("result_schema")
+        if schema_name and not (SCHEMA_DIR / schema_name).exists():
+            raise SystemExit(f"{path}: {section_name} schema does not exist: schema/{schema_name}")
     lifecycle = data["lifecycle"]
     for field in ("state_schema", "event_schema", "transition_schema", "fixing_record_schema", "market_operation_schema"):
         value = lifecycle.get(field)
