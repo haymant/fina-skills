@@ -4,9 +4,9 @@
   "kind": "page",
   "id": "trading.rfq.fcn",
   "title": "FCN RFQ",
-  "description": "Schema-driven FCN RFQ capture and quote workflow.",
+  "description": "Schema-driven FCN RFQ capture and quote workflow. Compose a structured request, submit it via the rfq.create logical operation, then price on the Quotes screen.",
   "schema": "trade.rfq-create",
-  "layout": "fcn.rfq-layout",
+  "layout": "trading.rfq.fcn-layout",
   "workflow": "fcn.rfq",
   "edit_modes": [
     "editable",
@@ -19,8 +19,8 @@
       "workflow": "fcn.rfq"
     },
     {
-      "kind": "field",
-      "path": "/client_reference"
+      "kind": "text",
+      "text": "Submit invokes the rfq.create logical operation. A price result is never auto-persisted as a quote."
     }
   ]
 }

@@ -6,12 +6,83 @@ aliases:
   - FCN
   - ELIFCN_KI
 status: executable
+flex:
+  header: ELIFCN_KI
+  payoff_script: ELIFCN_KI
+  model_group: memraki
+  blocks:
+    - name: KIKOSelect
+      aliases: [KIKOSELECT, KIKOSEL*]
+      purpose: Main selection block. Feature toggles (LKO/GKO/KI), return ratio, initial fixing date, basket constituents and reference prices, denomination, and settlement flags.
+      terms_path: /features
+      fields:
+        - productType
+        - notionalReturn
+        - returnRatio
+        - knockIn
+        - initialFixDate
+        - denomination
+        - underlying
+        - referencePrice
+        - underlyingCcy
+        - FXPair
+        - FXFixSource
+        - localKO
+        - globalKO
+        - knockInType
+        - ITMPayment
+    - name: RGACCDate
+      aliases: [RGACCDATE, FIXINGDATE]
+      purpose: Observation, accrual, and fixing date generation.
+      terms_path: /schedule
+      fields: [obvDate, accrual, fixingDone]
+    - name: RGACCLKO
+      aliases: [RGACCLKO, RGACCPERIO, PERIODS]
+      purpose: Per-period accrual, range bounds, local barriers, and KO coupons; carries the accrual indicator and N1/N2 counts.
+      terms_path: /economics
+      fields: [accIndicator, startDate, endDate, paymentDate, localKO, locBarPrice, locKOCpn, gblKOCpn, gblBarPrice, accruRate, lowRange, upRange, fixCoupon, N1, N2]
+    - name: globalKOStar
+      aliases: [GLOBALKO*, DAILYKO]
+      purpose: Global/daily KO observation schedule and payment timing (Period End vs KO Date).
+      terms_path: /features
+      fields: [effectiveSche, IREffectiveSche, IREffectiveDate, shifter, obvDate, effectiveDate, globalKO]
+    - name: knockInStar
+      aliases: [KNOCKIN*]
+      purpose: KI barrier and maturity payoff parameters (cap, floor, participation, strike, rebate) for the KI and no-KI branches.
+      terms_path: /economics
+      fields: [choice, KIBarrier, strikeKI2, maturBarrier, capUp, capUpVal, floorUp, floorUpVal, PRUp, strikeUp, obvDate, paymentDate, knockIn]
 terms:
   schema: fcn-terms-projection.schema.json
   version: pending-freeze
   source_schema: fcn-legacy-termsheet.schema.json
   source_fixture: schema/examples/fcn/source/termsheet1.fcn.sample.json
   projection_fixture: schema/examples/fcn/terms/fcn-terms-projection.example.json
+  feature_coverage:
+    observation_style:
+      - discrete
+      - continuous
+    performance_indicator:
+      - worst_of
+      - best_of
+      - average
+      - kth_best
+    barrier_scope:
+      - global
+      - local
+    barrier_roles:
+      - knock_in
+      - knock_out
+      - kiko
+    knock_out:
+      ko_type: [american, european]
+      operators: [">", ">="]
+      rebate_payment_type: [at_knock, at_maturity]
+      return_ratio: documented
+      ko_coupon: documented
+    memory:
+      memory_coupon: engine_evidenced
+      memory_ko: terms_and_ui_supported_engine_pending
+    accrual_indicator: [all, any]
 pricing_request:
   schema: pricing-request.schema.json
   version: reviewed-v1

@@ -16,8 +16,14 @@
     "notional": 50000.0,
     "strike": 0.78,
     "knock_in_barrier": 0.70,
+    "knock_out_barrier": null,
     "maturity_date": "2027-02-03",
-    "coupon_rate": 0.00713
+    "coupon_rate": 0.00713,
+    "return_ratio": 1.0,
+    "ko_coupon": 0.0,
+    "rebate_payment_type": "at_knock",
+    "ki_monitoring": "continuous",
+    "ko_monitoring": "discrete"
   },
   "schedule": {
     "evaluation_date": "2026-08-21",
@@ -29,7 +35,15 @@
     "final_fixing_eki": true,
     "physical_delivery": true,
     "worst_of": true,
-    "memory_coupon": true
+    "memory_coupon": true,
+    "memory_ko": false,
+    "ko_enabled": false,
+    "ko_type": "american",
+    "ko_operator": ">=",
+    "ki_operator": "<=",
+    "performance_indicator": "worst_of",
+    "perf_rank": 1,
+    "accrual_indicator": "all"
   },
   "settlement": {
     "payment_currency": "USD",

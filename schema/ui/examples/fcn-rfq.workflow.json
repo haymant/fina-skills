@@ -1,0 +1,56 @@
+{
+  "registry": "fina/ui",
+  "version": 1,
+  "kind": "workflow",
+  "id": "fcn.rfq",
+  "title": "FCN RFQ",
+  "description": "FCN RFQ wizard with flex-block steps, list-detail underlyings, and review.",
+  "root_schema": "trade.rfq-create",
+  "steps": [
+    {
+      "id": "identity",
+      "title": "Product identity",
+      "layout": "fcn.identity",
+      "required": true
+    },
+    {
+      "id": "underlyings",
+      "title": "Underlyings",
+      "layout": "fcn.underlyings",
+      "block": "fcn.underlyings",
+      "required": true,
+      "navigation": "list-detail"
+    },
+    {
+      "id": "coupon",
+      "title": "Coupon schedule",
+      "layout": "fcn.coupon",
+      "required": true
+    },
+    {
+      "id": "protection",
+      "title": "Protection",
+      "layout": "fcn.protection",
+      "required": true
+    },
+    {
+      "id": "settlement",
+      "title": "Settlement",
+      "layout": "fcn.settlement",
+      "required": true
+    },
+    {
+      "id": "pricing",
+      "title": "Pricing configuration",
+      "layout": "fcn.pricing",
+      "required": true
+    },
+    {
+      "id": "review",
+      "title": "Review",
+      "layout": "shared.review",
+      "block": "shared.review-submit",
+      "required": true
+    }
+  ]
+}

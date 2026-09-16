@@ -175,6 +175,11 @@ steps:
     block: fcn.protection
     required: true
 
+  - id: settlement
+    title: Settlement
+    block: fcn.settlement
+    required: true
+
   - id: pricing
     title: Pricing
     block: fcn.pricing-configuration
@@ -311,6 +316,26 @@ coupon_rate:
 ```
 
 The payload remains schema-compatible. Formatting must never silently change decimal-versus-percentage semantics.
+
+### Barrier and option enums
+
+Barrier and observation-style enums must render as plain selected options from the schema `enum` — never scripted conditional branching:
+
+```yaml
+ki_operator:
+  type: string
+  enum: ["<", "<="]
+  ui:
+    renderer: select
+
+ki_monitoring:
+  type: string
+  enum: ["discrete", "continuous"]
+  ui:
+    renderer: select
+```
+
+Engineering values such as `>`, `>=`, `<`, `<=` are valid select options; the option label must equal the canonical value so the payload round-trips exactly. Products that mix semantics on one screen (e.g. KIKO: barrier family, performance indicator, global/local scope, KO economics) belong in one shared protection flex block plus per-underlying barrier levels on the underlying item, rather than a single unbounded form.
 
 ## Separate product schema from UI layout
 

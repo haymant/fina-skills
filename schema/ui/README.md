@@ -36,10 +36,14 @@ from pathlib import Path
 from jsonschema import Draft202012Validator
 
 schema = json.loads(Path("schema/ui/ui-metadata.schema.json").read_text())
-example = json.loads(Path("schema/ui/examples/fcn-rfq.ui.json").read_text())
-Draft202012Validator(schema).validate(example)
+validator = Draft202012Validator(schema)
+for name in ("fcn-rfq.ui.json", "fcn-rfq.workflow.json"):
+    example = json.loads(Path(f"schema/ui/examples/{name}").read_text())
+    validator.validate(example)
 print("UI metadata is valid")
 PY
 ```
+
+The `examples/` directory holds the page fixture (`fcn-rfq.ui.json`) and the workflow fixture it references (`fcn-rfq.workflow.json`), whose steps mirror the current FCN RFQ flow: identity → underlyings → coupon → protection → settlement → pricing → review.
 
 Read [`skills/finap-dev/references/ui-runtime-principles.md`](../../skills/finap-dev/references/ui-runtime-principles.md) for the renderer runtime, flex-block state model, action lifecycle, provenance, and rollout phases.

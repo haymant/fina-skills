@@ -5,6 +5,31 @@ aliases:
   - KIKO
   - Reverse KIKO
 status: design
+flex:
+  header: EqFlexKioV
+  payoff_script: EqFlexKioV
+  model_group: EQ_KIKOREVS
+  blocks:
+    - name: KIKOSEL*
+      aliases: [KIKOSELECT, KIKOSTRUCT]
+      purpose: Main selection block. Enables/disables Local KO, Global KO, and Knock-In; defines Return Ratio (%) and the initial fixing date, and holds the initial fixing price grid.
+      terms_path: /features
+      fields: [localKO, globalKO, knockIn, returnRatio, initialFixDate, referencePrice]
+    - name: LOCALKO*
+      aliases: [RGACCLKO, RGACCPERIO, PERIODS]
+      purpose: Periodic Local KO observation/effective schedules, LocKO/GblKO comparison operators, and period-specific GKO coupons and barriers.
+      terms_path: /economics
+      fields: [locKOCpn, gblKOCpn, locBarPrice, gblBarPrice, LocKOBarCompare, GblKOBarCompare]
+    - name: GLOBALKO*
+      aliases: [GLOBALKO, DAILYKO]
+      purpose: Daily Global KO observation/effective schedules, discrete vs continuous monitoring, and payment timing (Period End vs KO Date).
+      terms_path: /economics
+      fields: [choice, effectiveSche, shifter, obvDate, effectiveDate]
+    - name: KNOCKIN*
+      aliases: [KNOCKIN]
+      purpose: KI barrier (%) and schedule generator, discrete vs continuous checking, and the KI maturity payoff parameters (Cap, Floor, KI Strike, Rebate).
+      terms_path: /economics
+      fields: [choice, KIBarrier, capUp, capUpVal, floorUp, floorUpVal, strikeKI1, strikeKI2, rebate]
 terms:
   schema: ProductTerms
   version: pending-freeze

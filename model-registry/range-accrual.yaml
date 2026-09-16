@@ -6,6 +6,36 @@ aliases:
   - MemRaki
   - RakiPlus
 status: design
+flex:
+  header: EqFlexRaki
+  payoff_script: EqFlexRaki
+  model_group: EQ_RAKI
+  blocks:
+    - name: KIKOSELECT
+      aliases: [KIKOSTRUCT, KIKOSEL*]
+      purpose: Basket definition, feature toggles (LKO/GKO/KI), return ratio, initial fixing, denomination, and quanto FX fields.
+      terms_path: /features
+      fields: [underlying, referencePrice, localKO, globalKO, knockIn, returnRatio, denomination]
+    - name: RGACCDATE
+      aliases: [FIXINGDATE]
+      purpose: Daily observation / fixing date generation for range accrual and barrier monitoring.
+      terms_path: /schedule
+      fields: [obvDate, accrual, fixingDone]
+    - name: RGACCLKO
+      aliases: [RGACCLKO+, RGACCPERIO, PERIODS]
+      purpose: Period schedules, accrual rate, range bounds and compare operators, local barriers, KO coupons, and accrual indicator.
+      terms_path: /economics
+      fields: [accIndicator, accruRate, lowRange, upRange, locBarPrice, locKOCpn, gblKOCpn, N1, N2]
+    - name: GLOBALKO*
+      aliases: [GLOBALKO, DAILYKO]
+      purpose: Global/daily KO observation schedule and payment timing (Period End vs KO Date).
+      terms_path: /economics
+      fields: [choice, effectiveSche, shifter, obvDate, effectiveDate]
+    - name: KNOCKIN*
+      aliases: [KNOCKIN]
+      purpose: KI barrier and maturity payoff parameters (cap, floor, participation, strike, rebate).
+      terms_path: /economics
+      fields: [choice, KIBarrier, capUp, floorUp, PRUp, strikeKI1, rebate]
 terms:
   schema: ProductTerms
   version: pending-freeze

@@ -64,8 +64,14 @@
         "notional": {"type": "number", "exclusiveMinimum": 0},
         "strike": {"type": "number", "exclusiveMinimum": 0},
         "knock_in_barrier": {"type": "number", "exclusiveMinimum": 0},
+        "knock_out_barrier": {"type": ["number", "null"], "exclusiveMinimum": 0},
         "maturity_date": {"type": "string", "format": "date"},
-        "coupon_rate": {"type": "number"}
+        "coupon_rate": {"type": "number"},
+        "return_ratio": {"type": "number", "minimum": 0, "maximum": 1},
+        "ko_coupon": {"type": "number"},
+        "rebate_payment_type": {"enum": ["at_knock", "at_maturity"]},
+        "ki_monitoring": {"enum": ["discrete", "continuous"]},
+        "ko_monitoring": {"enum": ["discrete", "continuous"]}
       }
     },
     "schedule": {
@@ -87,7 +93,15 @@
         "final_fixing_eki": {"type": "boolean"},
         "physical_delivery": {"type": "boolean"},
         "worst_of": {"type": "boolean"},
-        "memory_coupon": {"type": "boolean"}
+        "memory_coupon": {"type": "boolean"},
+        "memory_ko": {"type": "boolean"},
+        "ko_enabled": {"type": "boolean"},
+        "ko_type": {"enum": ["american", "european"]},
+        "ko_operator": {"enum": [">", ">="]},
+        "ki_operator": {"enum": ["<", "<="]},
+        "performance_indicator": {"enum": ["worst_of", "best_of", "average", "kth_best"]},
+        "perf_rank": {"type": "integer", "minimum": 1},
+        "accrual_indicator": {"enum": ["all", "any"]}
       }
     },
     "settlement": {
@@ -96,7 +110,13 @@
       "required": ["payment_currency", "delivery_type"],
       "properties": {
         "payment_currency": {"type": "string", "minLength": 3},
-        "delivery_type": {"enum": ["cash", "physical", "cash_or_physical"]}
+        "delivery_type": {"enum": ["cash", "physical", "cash_or_physical"]},
+        "itm_payment": {"enum": ["cash", "delivery", "none"]},
+        "principal_type": {"enum": ["nominal", "quantity"]},
+        "fx_rule": {"enum": ["basic", "quanto", "composite"]},
+        "fx_fixing_source": {"type": "string"},
+        "fx_fixing_time": {"type": "string"},
+        "fx_fixing_time_zone": {"type": "string"}
       }
     },
     "provenance": {

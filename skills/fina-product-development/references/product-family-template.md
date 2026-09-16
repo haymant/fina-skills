@@ -21,11 +21,11 @@ Copy this structure when introducing or reviewing a product family. Replace brac
 
 ## 3. Feature map
 
-| Feature | Terms field(s) | Pricing input | Lifecycle state | Event/operation | Risk output |
-|---|---|---|---|---|---|
-| [feature] | [path] | [field] | [state] | [event] | [greek/cashflow] |
+| Feature | Flex block / field | Terms field(s) | Pricing input | Lifecycle state | Event/operation | Risk output |
+|---|---|---|---|---|---|---|
+| [feature] | [block.field] | [path] | [field] | [state] | [event] | [greek/cashflow] |
 
-Cover barriers, observation style, accrual, memory, participation/cap/floor, settlement, FX, and corporate actions where relevant.
+Cover barriers, observation style, accrual, memory, participation/cap/floor, settlement, FX, and corporate actions where relevant. Record the Murex flex header and block names for each feature so the booking layer stays traceable to the canonical terms and pricing fields (see the `flex` section of the model registry entry). Note: the "Flex block / field" column is informational documentation — it does not drive finap UI rendering (see model-wiring-contract.md for scope).
 
 ## 4. Schedules and market data
 

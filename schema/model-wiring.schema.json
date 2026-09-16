@@ -44,6 +44,9 @@
         "deprecated"
       ]
     },
+    "flex": {
+      "$ref": "#/$defs/flexWiring"
+    },
     "terms": {
       "$ref": "#/$defs/versionedContract"
     },
@@ -230,6 +233,74 @@
     }
   },
   "$defs": {
+    "flexWiring": {
+      "type": "object",
+      "description": "Documentation-only. Records the Murex flex header, payoff script, model group, and block layout for schema formulation guidance and coverage tracking. Not consumed by finap's runtime — finap's UI is driven by trade.rfq-create.schema.json → field-ui entries → metadata-registry.",
+      "additionalProperties": false,
+      "required": [
+        "header"
+      ],
+      "properties": {
+        "header": {
+          "type": "string",
+          "minLength": 1
+        },
+        "payoff_script": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_group": {
+          "type": "string",
+          "minLength": 1
+        },
+        "blocks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/flexBlock"
+          }
+        }
+      }
+    },
+    "flexBlock": {
+      "type": "object",
+      "description": "A Murex legacy flex block grouping (informational only). The `fields` list documents which terms belong to this block for coverage tracking; it does not generate UI components or schema properties automatically.",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "purpose"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        },
+        "terms_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
     "versionedContract": {
       "type": "object",
       "additionalProperties": true,
