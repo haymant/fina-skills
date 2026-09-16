@@ -16,20 +16,24 @@ Welcome to the Equity Structured Products Playbook. This document serves as a co
 
 ### Accumulators
 *   [Equity Accumulator / Decumulator (AQDQ)](./Products/Accumulators/AQDQ.md)
+*   [AQDQ payoff chapter](./Products/Accumulators/payoff/aqdq.md)
 
 ### Barrier Products
 *   [Vanilla Barrier Option (BAROPT)](./Products/Barriers/Barrier_Option.md)
 *   [Discrete Barrier Notes (DBrW)](./Products/Barriers/Discrete_Barrier.md)
+*   [BAROPT payoff chapter](./Products/Barriers/payoff/barrier-option.md)
 
 ### Range Accrual (Raki Family)
 *   [Range Accrual (Raki)](./Products/Range_Accruals/Range_Accrual_Raki.md)
 *   [Memory Range Accrual (MemRaki)](./Products/Range_Accruals/Memory_Range_Accrual_MemRaki.md)
 *   [RakiPlus & MemRakiPlus](./Products/Range_Accruals/RakiPlus_MemRakiPlus.md)
+*   [RakiPlus & MemRakiPlus payoff chapter](./Products/Range_Accruals/payoff/raki-plus.md)
 *   [Double No-Touch Range Accrual](./Products/Range_Accruals/Double_No_Touch_RA.md)
 *   [RAKI Enhancement Note/Swap](./Products/Range_Accruals/RAKI_Enhancement.md)
 
 ### KIKO (Knock-In, Knock-Out)
 *   [Reverse KIKO](./Products/KIKO/Reverse_KIKO.md)
+*   [Reverse KIKO payoff chapter](./Products/KIKO/payoff/reverse-kiko.md)
 
 ### Other Exotics
 *   [Digital Option](./Products/Other_Exotics/Digital_Option.md)
@@ -38,9 +42,9 @@ Welcome to the Equity Structured Products Playbook. This document serves as a co
 
 ### Financing and Stock Loan
 *   [Stock Borrowing/Lending & Repo](./Products/Financing/SBL_Repo.md)
+*   [SBL and Basket Repo payoff chapter](./Products/Financing/payoff/sbl-repo.md)
 
 
 ## Operations
 
 *   [Running Murex LiveBook](./Operations/LiveBook.md)
-
