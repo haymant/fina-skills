@@ -14,8 +14,8 @@ Read the relevant reference before changing a feature:
 - `references/business-requirements.md` — product scope, required routes, and acceptance criteria.
 - `references/ui-runtime-principles.md` — schema-driven React renderer, rich arrays, expandable objects, and flex-block workflows.
 - `references/fin-a-boundaries.md` — product, model, process, lifecycle, evidence, and adapter boundaries.
-- `schema/ui/ui-metadata.schema.json` — canonical shape for pages, layouts, workflows, flex blocks, renderer hints, actions, and resources.
-- `schema/ui/examples/fcn-rfq.ui.json` — minimal UI metadata fixture; validate it independently before wiring a page.
+- `../../schema/ui/ui-metadata.schema.json` — canonical shape for pages, layouts, workflows, flex blocks, renderer hints, actions, and resources.
+- `../../schema/ui/examples/fcn-rfq.ui.json` — minimal UI metadata fixture; validate it independently before wiring a page.
 
 ## Repository rules
 
