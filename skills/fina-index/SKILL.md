@@ -21,6 +21,7 @@ Canonical JSON Schemas live in the repository-root `schema/` directory. Read the
 | Parquet/DuckDB SSRM, MCP, `fina-table`, report versions | `fina-olap` |
 | Full RFQ → quote → trade → reprice → OLAP proof | `fina-e2e-coordinator` |
 | Product-family onboarding, model wiring, delivery gates, release evidence | `fina-product-development` |
+| FinAP dashboard, schema-driven React UI, flex-block workflows, and UI provenance | `finap-dev` |
 | Architecture decisions and non-goals | `fina-master` |
 
 ## Selection rules
