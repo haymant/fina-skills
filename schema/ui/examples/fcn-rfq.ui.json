@@ -1,0 +1,26 @@
+{
+  "registry": "fina/ui",
+  "version": 1,
+  "kind": "page",
+  "id": "trading.rfq.fcn",
+  "title": "FCN RFQ",
+  "description": "Schema-driven FCN RFQ capture and quote workflow.",
+  "schema": "trade.rfq-create",
+  "layout": "fcn.rfq-layout",
+  "workflow": "fcn.rfq",
+  "edit_modes": [
+    "editable",
+    "read-only",
+    "diagnostic"
+  ],
+  "children": [
+    {
+      "kind": "workflow",
+      "workflow": "fcn.rfq"
+    },
+    {
+      "kind": "field",
+      "path": "/client_reference"
+    }
+  ]
+}

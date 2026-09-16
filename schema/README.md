@@ -50,6 +50,8 @@ When adding a schema:
 
 ## Examples
 
+UI metadata is maintained separately under [`ui/`](ui/). Its canonical shape is [`ui/ui-metadata.schema.json`](ui/ui-metadata.schema.json), with an independent FCN fixture under [`ui/examples/`](ui/examples/). The UI metadata contract governs presentation and workflow references; it does not replace or merge with product schemas.
+
 See [`examples/basic/README.md`](examples/basic/README.md) for one minimal fixture per reviewed schema and an independent verifier. Run `python schema/examples/basic/verify_examples.py --demo` from the repository root; validation uses only the local schemas and the `jsonschema` package, without FinA services, MCP, databases, cloud credentials, or network access.
 
 See [`examples/fcn/README.md`](examples/fcn/README.md) for the `ELIFCN_KI` term-sheet sample and the real ETL-to-native-C++ scheduler E2E runner. Unlike the basic fixtures, the FCN example requires the local FinA runtime and compiled `fina_risk_cpp` module.

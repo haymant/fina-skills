@@ -14,6 +14,8 @@ Read the relevant reference before changing a feature:
 - `references/business-requirements.md` — product scope, required routes, and acceptance criteria.
 - `references/ui-runtime-principles.md` — schema-driven React renderer, rich arrays, expandable objects, and flex-block workflows.
 - `references/fin-a-boundaries.md` — product, model, process, lifecycle, evidence, and adapter boundaries.
+- `schema/ui/ui-metadata.schema.json` — canonical shape for pages, layouts, workflows, flex blocks, renderer hints, actions, and resources.
+- `schema/ui/examples/fcn-rfq.ui.json` — minimal UI metadata fixture; validate it independently before wiring a page.
 
 ## Repository rules
 
@@ -36,8 +38,9 @@ Read the relevant reference before changing a feature:
 4. Implement the smallest route-owned component that consumes the metadata.
 5. Wire server actions through a logical operation or typed adapter.
 6. Handle loading, empty, error, disabled, validation, and mobile states.
-7. Run `pnpm check` and `pnpm build` before declaring the change complete.
-8. Record new renderer patterns, process assumptions, or contract decisions in the appropriate reference.
+7. Validate UI metadata against `schema/ui/ui-metadata.schema.json`.
+8. Run `pnpm check` and `pnpm build` before declaring the change complete.
+9. Record new renderer patterns, process assumptions, or contract decisions in the appropriate reference.
 
 ## Renderer policy
 
