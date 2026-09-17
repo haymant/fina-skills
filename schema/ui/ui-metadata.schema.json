@@ -5,12 +5,7 @@
   "description": "Metadata for schema-driven FinAP pages, layouts, fields, workflows, actions, resources, and renderer hints. Domain meaning remains in the referenced JSON Schema.",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "registry",
-    "version",
-    "kind",
-    "id"
-  ],
+  "required": ["registry", "version", "kind", "id"],
   "properties": {
     "registry": {
       "const": "fina/ui"
@@ -20,15 +15,7 @@
       "minimum": 1
     },
     "kind": {
-      "enum": [
-        "page",
-        "layout",
-        "workflow",
-        "flex-block",
-        "field-ui",
-        "action",
-        "resource"
-      ]
+      "enum": ["page", "layout", "workflow", "flex-block", "field-ui", "action", "resource"]
     },
     "id": {
       "type": "string",
@@ -62,6 +49,10 @@
       "type": "string",
       "minLength": 1
     },
+    "interactions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/interaction" }
+    },
     "layout": {
       "type": "string",
       "minLength": 1
@@ -91,11 +82,7 @@
       "pattern": "^[a-z][a-z0-9]*(\\.[a-z0-9_-]+)+$"
     },
     "confirmation_policy": {
-      "enum": [
-        "never",
-        "when_destructive",
-        "always"
-      ]
+      "enum": ["never", "when_destructive", "always"]
     },
     "preconditions": {
       "type": "array",
@@ -190,11 +177,7 @@
     "edit_modes": {
       "type": "array",
       "items": {
-        "enum": [
-          "editable",
-          "read-only",
-          "diagnostic"
-        ]
+        "enum": ["editable", "read-only", "diagnostic"]
       },
       "uniqueItems": true
     },
@@ -215,18 +198,10 @@
     "layoutNode": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "kind"
-      ],
+      "required": ["kind"],
       "properties": {
         "kind": {
-          "enum": [
-            "field",
-            "layout",
-            "workflow",
-            "text",
-            "divider"
-          ]
+          "enum": ["field", "layout", "workflow", "text", "divider"]
         },
         "path": {
           "type": "string",
@@ -252,11 +227,7 @@
     "workflowStep": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "title",
-        "layout"
-      ],
+      "required": ["id", "title", "layout"],
       "properties": {
         "id": {
           "type": "string",
@@ -286,11 +257,7 @@
           "type": "boolean"
         },
         "navigation": {
-          "enum": [
-            "next",
-            "subflow",
-            "list-detail"
-          ]
+          "enum": ["next", "subflow", "list-detail"]
         },
         "visible_when": {
           "$ref": "#/$defs/condition"
@@ -300,10 +267,7 @@
     "collection": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "path",
-        "item_schema"
-      ],
+      "required": ["path", "item_schema"],
       "properties": {
         "path": {
           "type": "string",
@@ -322,16 +286,10 @@
     "navigation": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "mode"
-      ],
+      "required": ["mode"],
       "properties": {
         "mode": {
-          "enum": [
-            "next",
-            "subflow",
-            "list-detail"
-          ]
+          "enum": ["next", "subflow", "list-detail"]
         },
         "list_title": {
           "type": "string",
@@ -348,11 +306,7 @@
       "additionalProperties": false,
       "properties": {
         "unit": {
-          "enum": [
-            "decimal",
-            "percent",
-            "currency"
-          ]
+          "enum": ["decimal", "percent", "currency"]
         },
         "display_scale": {
           "type": "integer",
@@ -365,12 +319,21 @@
         }
       }
     },
+    "interaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation"],
+      "properties": {
+        "operation": { "type": "string", "minLength": 1 },
+        "trigger": { "enum": ["change", "blur"] },
+        "debounce_ms": { "type": "integer", "minimum": 0 },
+        "target_paths": { "type": "array", "items": { "type": "string" } }
+      }
+    },
     "pathReference": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "path"
-      ],
+      "required": ["path"],
       "properties": {
         "path": {
           "type": "string",
@@ -385,9 +348,7 @@
     "condition": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "path"
-      ],
+      "required": ["path"],
       "properties": {
         "path": {
           "type": "string",
@@ -402,41 +363,27 @@
       },
       "oneOf": [
         {
-          "required": [
-            "equals"
-          ]
+          "required": ["equals"]
         },
         {
-          "required": [
-            "in"
-          ]
+          "required": ["in"]
         },
         {
-          "required": [
-            "not_equals"
-          ]
+          "required": ["not_equals"]
         }
       ]
     },
     "precondition": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "path",
-        "operator"
-      ],
+      "required": ["path", "operator"],
       "properties": {
         "path": {
           "type": "string",
           "pattern": "^(/[^/~]*(~[01][^/~]*)*)*$"
         },
         "operator": {
-          "enum": [
-            "equals",
-            "in",
-            "exists",
-            "not_equals"
-          ]
+          "enum": ["equals", "in", "exists", "not_equals"]
         },
         "value": {},
         "message": {
@@ -448,10 +395,7 @@
     "argumentBinding": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "input_path",
-        "argument_path"
-      ],
+      "required": ["input_path", "argument_path"],
       "properties": {
         "input_path": {
           "type": "string",
