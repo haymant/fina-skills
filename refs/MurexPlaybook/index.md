@@ -29,6 +29,7 @@ Welcome to the Equity Structured Products Playbook. This document serves as a co
 *   [Memory Range Accrual (MemRaki)](./Products/Range_Accruals/Memory_Range_Accrual_MemRaki.md)
 *   [RakiPlus & MemRakiPlus](./Products/Range_Accruals/RakiPlus_MemRakiPlus.md)
 *   [RakiPlus & MemRakiPlus payoff chapter](./Products/Range_Accruals/payoff/raki-plus.md)
+*   [RakiPlus-to-native-engine methodology](./Products/Range_Accruals/payoff/raki-plus-native-engine-methodology.md)
 *   [Double No-Touch Range Accrual](./Products/Range_Accruals/Double_No_Touch_RA.md)
 *   [RAKI Enhancement Note/Swap](./Products/Range_Accruals/RAKI_Enhancement.md)
 *   [Raki payoff chapter](./Products/Range_Accruals/payoff/range-accrual-raki.md)

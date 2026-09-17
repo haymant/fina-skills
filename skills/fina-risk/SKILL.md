@@ -7,6 +7,8 @@ description: FinA equity-derivative pricing, sensitivities, P&L, model DSLs, con
 
 Use for pricing and risk computation. Preserve backend plurality: terminal parity, daily batch, hybrid AAD, and future kernels can coexist behind shared semantics.
 
+For Murex payoff-script coverage, FCN/RakiPlus native implementation, C++ file organization, performance-sensitive inline payoff branches, leg-level output, or stdio MCP integration, read [`references/native-engine-design.md`](references/native-engine-design.md) before changing the engine.
+
 ## One spec, two proving backends
 
 Define product-family lifecycle functions once in a closed, versioned DSL. Maintain a reference interpreter/oracle in the shared semantic layer and a compiled vectorized kernel in `fina-risk`. Keep them equal with a conformance corpus; do not make the JSON reducer the production hot path.
@@ -21,6 +23,8 @@ A kernel should represent state as small integer vectors, guards as predicated c
 4. Run the target backend and compare PV, cashflows, state transitions, and Greeks within declared tolerances.
 5. Record method/backend/model version and market snapshot in provenance.
 6. Never replace a failed real pricing call with mocked output in an E2E pass.
+
+7. Keep Murex semantics, canonical payoff graphs, typed native kernels, and MCP transport as separate layers. Extend C++ only for a confirmed semantic gap, and preserve a readable oracle plus conformance evidence for every new branch.
 
 ## Risk outputs
 

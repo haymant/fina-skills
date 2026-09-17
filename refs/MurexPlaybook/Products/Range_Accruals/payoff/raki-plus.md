@@ -1,5 +1,7 @@
 # RakiPlus and MemRakiPlus — Payoff Chapter
 
+For translating this payoff contract into the FinA native C++ lane, read [RakiPlus-to-Native-Engine Methodology](raki-plus-native-engine-methodology.md).
+
 ## Purpose, classification, and scope
 
 **RakiPlus** and **MemRakiPlus** are the enhanced booking and operations variants of, respectively, an equity range-accrual note and an equity memory range-accrual note. Their pricing foundations remain `EqFlexRaki` and `EqFlexMemR`; the documented change is chiefly in trade representation and processing. In particular, a market-level **dummy basket** may be used as the basket definition, while the transaction-specific equity constituents and their reference prices are entered in the trade. This removes the need to maintain a separately predefined basket for each constituent combination. [1]
