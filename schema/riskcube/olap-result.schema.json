@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.dev/schema/riskcube/olap-result.schema.json",
+  "title": "RiskCube OLAP result",
+  "type": "object",
+  "required": ["rows", "lastRow"],
+  "properties": {
+    "rows": { "type": "array", "items": { "type": "object" } },
+    "lastRow": { "type": ["integer", "null"] },
+    "columns": { "type": "array", "items": { "type": "string" } },
+    "provenance": { "type": "object", "additionalProperties": true }
+  }
+}

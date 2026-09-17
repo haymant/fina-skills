@@ -37,6 +37,8 @@ The source `FinA` revision for the first three schemas is `7818a28`. The `fina-t
 
 ## RiskCube contracts
 
+The application and service ownership, submodule policy, stdio/Streamable HTTP MCP boundary, tac-engine status, and FinAP RiskCube workflow are defined in [`../refs/finap-architecture-and-mcp.md`](../refs/finap-architecture-and-mcp.md). This architecture reference is normative for FinAP integration work; legacy `tradeac` and `fina-pricer` remain reference-only systems.
+
 The `schema/riskcube/` family is the canonical contract for scenario/version metadata, report metadata, and generated columnar dataset manifests:
 
 | Schema | Responsibility |
@@ -44,7 +46,10 @@ The `schema/riskcube/` family is the canonical contract for scenario/version met
 | `riskcube/scenario.schema.json` | Durable market-data definition |
 | `riskcube/version.schema.json` | Immutable release/execution anchor |
 | `riskcube/report.schema.json` | Risk, P&L, Taylor, and forecast report metadata |
+| `riskcube/slice.schema.json` | Reusable instrument-universe slice definition |
 | `riskcube/dataset-manifest.schema.json` | Typed Parquet/DuckDB storage manifest |
+| `riskcube/olap-query.schema.json` | Typed SSRM query envelope |
+| `riskcube/olap-result.schema.json` | Typed OLAP result envelope |
 
 Generated sensitivity, P&L, Taylor, and forecast values are not JSON fields. They are typed columns in Hive-partitioned Parquet queried through DuckDB. The normalized RFK tuple is the composite risk-factor key; see [`../refs/riskcube/columnar-storage-and-olap.md`](../refs/riskcube/columnar-storage-and-olap.md).
 

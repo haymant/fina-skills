@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.dev/schema/riskcube/slice.schema.json",
+  "title": "RiskCube slice",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["slice_key", "name", "universe_snapshot"],
+  "properties": {
+    "slice_key": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "universe_snapshot": { "type": "string", "minLength": 1 },
+    "instrument_ids": { "type": "array", "items": { "type": "string" } },
+    "instrument_filter": { "type": "object", "additionalProperties": true },
+    "status": { "enum": ["draft", "active", "retired"] },
+    "created_at": { "type": "integer" }
+  }
+}

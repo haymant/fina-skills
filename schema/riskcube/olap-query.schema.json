@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.dev/schema/riskcube/olap-query.schema.json",
+  "title": "RiskCube OLAP query",
+  "type": "object",
+  "required": ["report_key", "startRow", "endRow"],
+  "properties": {
+    "report_key": { "type": "string", "minLength": 1 },
+    "startRow": { "type": "integer", "minimum": 0 },
+    "endRow": { "type": "integer", "minimum": 0 },
+    "rowGroupCols": { "type": "array", "items": { "type": "object" } },
+    "groupKeys": { "type": "array" },
+    "pivotCols": { "type": "array", "items": { "type": "object" } },
+    "valueCols": { "type": "array", "items": { "type": "object" } },
+    "filterModel": { "type": "object" },
+    "sortModel": { "type": "array", "items": { "type": "object" } },
+    "includes": { "type": "array", "items": { "type": "string" } }
+  }
+}
