@@ -30,6 +30,10 @@ A kernel should represent state as small integer vectors, guards as predicated c
 
 Keep PV, currency, price, full sensitivity vector, P&L attribution, checksums, method, and provenance distinct. Consumers may choose different lanes; reconciliation comes from shared meaning and inputs, not identical engines.
 
+For RiskCube scenario/version lifecycle and immutable execution identity, read [`refs/riskcube/scenario-version-contract.md`](../../refs/riskcube/scenario-version-contract.md) and validate against [`schema/riskcube/scenario.schema.json`](../../schema/riskcube/scenario.schema.json) and [`schema/riskcube/version.schema.json`](../../schema/riskcube/version.schema.json). For risk, P&L, Taylor decomposition, and forecast report metadata, data, and actions, read [`refs/riskcube/report-management.md`](../../refs/riskcube/report-management.md).
+
+Never store generated sensitivities, P&L, Taylor terms, or forecasts in JSON. Read [`refs/riskcube/columnar-storage-and-olap.md`](../../refs/riskcube/columnar-storage-and-olap.md) for the RFK composite-key and Hive-partitioned Parquet contract.
+
 ## Canonical schemas
 
 Use [`schema/pricing-request.schema.json`](../../schema/pricing-request.schema.json) for engine inputs; use [`schema/risk-cell.schema.json`](../../schema/risk-cell.schema.json), [`schema/pnl-explain.schema.json`](../../schema/pnl-explain.schema.json), and [`schema/job-status.schema.json`](../../schema/job-status.schema.json) for reviewed output contracts.

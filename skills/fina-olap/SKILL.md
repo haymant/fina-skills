@@ -23,10 +23,14 @@ The Python package exposes REST, MCP stdio/streamable HTTP, and a Vercel adapter
 
 Join risk rows to trade/report manifests using explicit version anchors. Record query inputs, filters, grouping, source partitions, engine/model versions, and materialization time so a report can be reproduced.
 
+For RiskCube data and report contracts, read [`../../refs/riskcube/report-management.md`](../../refs/riskcube/report-management.md) and [`../../refs/riskcube/columnar-storage-and-olap.md`](../../refs/riskcube/columnar-storage-and-olap.md). Generated sensitivities, P&L, Taylor, and forecast values must be typed Parquet/DuckDB columns, keyed by the normalized RFK composite key, with Hive partitioning; never query generated values from JSON blobs.
+
+For `/riskcube/cube`, use the fina-olap stdio MCP adapter and the `fina-table` SSRM UX. Keep DuckDB paths, MCP commands, allowlists, and SQL generation server-side.
+
 ## Verification
 
 Run Python unit/E2E tests, React unit tests, and demo/browser tests when UI behavior changes. Test filters, grouping, pivot, pagination, exports, object-store resolution, MCP transport, and path rewrites.
 
 ## Schema boundary
 
-Risk and trade materializations currently use the reviewed contracts in [`schema/risk-cell.schema.json`](../../schema/risk-cell.schema.json), [`schema/pnl-explain.schema.json`](../../schema/pnl-explain.schema.json), and [`schema/storage-boundaries.schema.json`](../../schema/storage-boundaries.schema.json). Keep report-version and daily materialization schemas pending explicit design review.
+Risk and trade materializations use the reviewed contracts in [`schema/risk-cell.schema.json`](../../schema/risk-cell.schema.json), [`schema/pnl-explain.schema.json`](../../schema/pnl-explain.schema.json), and [`schema/storage-boundaries.schema.json`](../../schema/storage-boundaries.schema.json). RiskCube report metadata and dataset manifests use [`schema/riskcube/report.schema.json`](../../schema/riskcube/report.schema.json) and [`schema/riskcube/dataset-manifest.schema.json`](../../schema/riskcube/dataset-manifest.schema.json).

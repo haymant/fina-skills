@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/riskcube/version.schema.json",
+  "title": "FinA RiskCube Version",
+  "description": "Immutable release and execution anchor shared by scenario runs and reports.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version_key", "name", "status", "trade_repository_snapshot_datetime", "created_at"],
+  "properties": {
+    "version_key": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"},
+    "name": {"type": "string", "minLength": 1},
+    "description": {"type": "string"},
+    "status": {"enum": ["draft", "running", "completed", "failed", "retired"]},
+    "batch_key": {"type": ["string", "null"]},
+    "trade_repository_snapshot_datetime": {"type": "string", "format": "date-time"},
+    "market_data_as_of": {"type": ["string", "null"], "format": "date-time"},
+    "engine_version": {"type": "string"},
+    "schema_version": {"type": "string"},
+    "scenario_keys": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "created_at": {"type": "string", "format": "date-time"},
+    "created_by": {"type": "string"},
+    "completed_at": {"type": ["string", "null"], "format": "date-time"},
+    "metadata": {"type": "object", "additionalProperties": true}
+  }
+}

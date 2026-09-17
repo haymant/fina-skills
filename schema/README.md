@@ -35,6 +35,19 @@ The following existing schemas were copied from the source repositories and form
 
 The source `FinA` revision for the first three schemas is `7818a28`. The `fina-trade` sources were reviewed at `3788c65`; the `fina-risk` sources were reviewed at `8884093`. `fina-olap` was inspected at `6b67553`, but no OLAP schema was promoted in this tranche because its current contract is implemented in Python and its report-version materialization schema is not yet frozen.
 
+## RiskCube contracts
+
+The `schema/riskcube/` family is the canonical contract for scenario/version metadata, report metadata, and generated columnar dataset manifests:
+
+| Schema | Responsibility |
+|---|---|
+| `riskcube/scenario.schema.json` | Durable market-data definition |
+| `riskcube/version.schema.json` | Immutable release/execution anchor |
+| `riskcube/report.schema.json` | Risk, P&L, Taylor, and forecast report metadata |
+| `riskcube/dataset-manifest.schema.json` | Typed Parquet/DuckDB storage manifest |
+
+Generated sensitivity, P&L, Taylor, and forecast values are not JSON fields. They are typed columns in Hive-partitioned Parquet queried through DuckDB. The normalized RFK tuple is the composite risk-factor key; see [`../refs/riskcube/columnar-storage-and-olap.md`](../refs/riskcube/columnar-storage-and-olap.md).
+
 ## Boundary and review policy
 
 The unification plan identifies `ProductTerms`, `LifecycleState`, `InstrumentModel`, typed event envelopes, report-version manifests, and daily risk materialization as important but not yet frozen. Do **not** invent or freeze those schemas here solely from prose. Add each only after its owning repository has a concrete implementation or an explicit schema decision.

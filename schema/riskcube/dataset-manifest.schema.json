@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/riskcube/dataset-manifest.schema.json",
+  "title": "FinA RiskCube Columnar Dataset Manifest",
+  "description": "Manifest for generated Parquet/ DuckDB datasets. The manifest describes storage; it does not contain generated values.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dataset_id", "format", "root_uri", "partitioning", "primary_key", "columns"],
+  "properties": {
+    "dataset_id": {"type": "string"},
+    "format": {"const": "parquet"},
+    "root_uri": {"type": "string"},
+    "duckdb_view": {"type": "string"},
+    "partitioning": {"type": "object", "additionalProperties": false, "required": ["style", "columns", "path_template"], "properties": {"style": {"const": "hive"}, "columns": {"type": "array", "items": {"type": "string"}, "minItems": 1}, "path_template": {"type": "string"}}},
+    "primary_key": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
+    "columns": {"type": "array", "items": {"$ref": "#/$defs/column"}, "minItems": 1},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "schema_version": {"type": "string"}
+  },
+  "$defs": {
+    "column": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "logical_type", "nullable"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+        "logical_type": {"enum": ["string", "integer", "double", "boolean", "timestamp", "date"]},
+        "nullable": {"type": "boolean"},
+        "role": {"enum": ["partition", "rfk", "dimension", "value", "provenance"]},
+        "description": {"type": "string"}
+      }
+    }
+  }
+}

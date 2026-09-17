@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/riskcube/scenario.schema.json",
+  "title": "FinA RiskCube Scenario",
+  "description": "Durable market-data definition used to produce immutable RiskCube instances. It contains no generated risk values.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["scenario_key", "scenario_version", "name", "kind", "materialization_mode", "base_market_data_datetime", "trade_repository_snapshot_datetime"],
+  "properties": {
+    "scenario_key": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"},
+    "scenario_version": {"type": "string", "minLength": 1},
+    "name": {"type": "string", "minLength": 1},
+    "description": {"type": "string"},
+    "kind": {"enum": ["base", "rule", "snapshot", "current"]},
+    "materialization_mode": {"enum": ["rules", "snapshot", "resolver"]},
+    "base_market_data_datetime": {"type": "string", "format": "date-time"},
+    "trade_repository_snapshot_datetime": {"type": "string", "format": "date-time"},
+    "market_data_snapshot_ref": {"type": ["string", "null"]},
+    "manipulations": {"type": "array", "items": {"$ref": "#/$defs/manipulation"}},
+    "request_template_ref": {"type": ["string", "null"]},
+    "metadata": {"type": "object", "additionalProperties": true},
+    "created_at": {"type": "string", "format": "date-time"},
+    "created_by": {"type": "string"}
+  },
+  "$defs": {
+    "manipulation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "operation"],
+      "properties": {
+        "type": {"enum": ["spot", "volatility", "fx", "interest_rate", "dividend", "fx_volatility"]},
+        "operation": {"enum": ["absolute", "relative", "set", "parallel"]},
+        "value": {"type": ["number", "string", "array", "object"]},
+        "underlying": {"type": ["string", "null"]},
+        "currency_pair": {"type": ["string", "null"]},
+        "curve": {"type": ["string", "null"]},
+        "surface_parameter": {"type": ["string", "null"]},
+        "filter": {"type": ["object", "null"], "additionalProperties": true}
+      }
+    }
+  }
+}
