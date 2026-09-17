@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/ui/leg-allocation.schema.json",
+  "title": "FCN Economics and Leg Allocation",
+  "description": "Canonical contract separating user-entered FCN economics from compiler- and pricing-generated leg decomposition.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "legs"
+  ],
+  "properties": {
+    "legs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/leg"
+      }
+    },
+    "display_mode": {
+      "enum": [
+        "summary",
+        "detail",
+        "diagnostic"
+      ]
+    },
+    "compiler_status": {
+      "enum": [
+        "not_compiled",
+        "compiled",
+        "compile_error"
+      ]
+    },
+    "compiler_revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "pricing_status": {
+      "enum": [
+        "not_priced",
+        "priced",
+        "pricing_error"
+      ]
+    },
+    "source_request_id": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$defs": {
+    "leg": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "leg_id",
+        "name",
+        "role",
+        "origin",
+        "editable"
+      ],
+      "properties": {
+        "leg_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "enum": [
+            "funding",
+            "coupon",
+            "terminal_optionality",
+            "rebate",
+            "fee",
+            "other"
+          ]
+        },
+        "origin": {
+          "enum": [
+            "user_terms",
+            "compiled_payoff",
+            "pricing_engine",
+            "lifecycle_engine"
+          ]
+        },
+        "editable": {
+          "type": "boolean"
+        },
+        "status": {
+          "enum": [
+            "declared",
+            "compiled",
+            "priced",
+            "unavailable",
+            "error"
+          ]
+        },
+        "terms_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(/[^/~]*(~[01][^/~]*)*)*$"
+          },
+          "uniqueItems": true
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "payoff_graph_node": {
+          "type": "string",
+          "minLength": 1
+        },
+        "payment_schedule_path": {
+          "type": "string",
+          "pattern": "^(/[^/~]*(~[01][^/~]*)*)*$"
+        },
+        "pv": {
+          "type": "number"
+        },
+        "pv_currency": {
+          "type": "string",
+          "minLength": 3
+        },
+        "greeks": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "evidence": {
+          "$ref": "#/$defs/evidence"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "not_available",
+            "derived",
+            "verified",
+            "failed"
+          ]
+        },
+        "process_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "engine_marker": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manifest_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

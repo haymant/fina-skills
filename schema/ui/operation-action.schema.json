@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/ui/operation-action.schema.json",
+  "title": "FinAP Operation Action Metadata",
+  "description": "Metadata for a user intent mapped to a registered logical operation. It is not an authorization decision.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "registry",
+    "version",
+    "kind",
+    "id",
+    "operation",
+    "input_schema",
+    "record_binding",
+    "confirmation_policy"
+  ],
+  "properties": {
+    "registry": {
+      "const": "fina/ui"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "kind": {
+      "const": "action"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*(\\.[a-z0-9-]+)+$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "operation": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(\\.[a-z0-9_-]+)+$"
+    },
+    "process": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input_schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "result_schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "record_binding": {
+      "type": "string",
+      "minLength": 1
+    },
+    "confirmation_policy": {
+      "enum": [
+        "never",
+        "when_destructive",
+        "always"
+      ]
+    },
+    "preconditions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/precondition"
+      }
+    },
+    "actor_capability": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reason_required": {
+      "type": "boolean"
+    },
+    "idempotency_key_path": {
+      "type": "string",
+      "pattern": "^(/[^/~]*(~[01][^/~]*)*)*$"
+    },
+    "refresh_targets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "expected_events": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9]*(\\.[a-z0-9_-]+)+$"
+      },
+      "uniqueItems": true
+    },
+    "evidence_required": {
+      "type": "boolean"
+    },
+    "lifecycle_states": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "argument_bindings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/argumentBinding"
+      }
+    }
+  },
+  "$defs": {
+    "precondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "operator"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^(/[^/~]*(~[01][^/~]*)*)*$"
+        },
+        "operator": {
+          "enum": [
+            "equals",
+            "in",
+            "exists",
+            "not_equals"
+          ]
+        },
+        "value": {},
+        "message": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "argumentBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input_path",
+        "argument_path"
+      ],
+      "properties": {
+        "input_path": {
+          "type": "string",
+          "pattern": "^(/[^/~]*(~[01][^/~]*)*)*$"
+        },
+        "argument_path": {
+          "type": "string",
+          "pattern": "^(/[^/~]*(~[01][^/~]*)*)*$"
+        },
+        "required": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

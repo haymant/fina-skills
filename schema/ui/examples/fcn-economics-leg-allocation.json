@@ -1,0 +1,59 @@
+{
+  "legs": [
+    {
+      "leg_id": "funding",
+      "name": "FUNDING",
+      "role": "funding",
+      "origin": "user_terms",
+      "editable": true,
+      "status": "declared",
+      "terms_paths": [
+        "/notional",
+        "/settlement/return_ratio",
+        "/settlement/currency"
+      ],
+      "description": "Principal return at maturity or an authorized early termination event."
+    },
+    {
+      "leg_id": "coupon",
+      "name": "COUPON",
+      "role": "coupon",
+      "origin": "compiled_payoff",
+      "editable": false,
+      "status": "compiled",
+      "terms_paths": [
+        "/coupon",
+        "/schedule/observation_dates",
+        "/protection/memory_coupon"
+      ],
+      "payoff_graph_node": "fcn.coupon.range_accrual"
+    },
+    {
+      "leg_id": "put-terminal-optionality",
+      "name": "PUT / Terminal Optionality",
+      "role": "terminal_optionality",
+      "origin": "pricing_engine",
+      "editable": false,
+      "status": "priced",
+      "terms_paths": [
+        "/underlyings",
+        "/protection/knock_in_barrier",
+        "/protection/strike"
+      ],
+      "payoff_graph_node": "fcn.terminal.ki_residual",
+      "pv": -456789.12,
+      "pv_currency": "USD",
+      "evidence": {
+        "status": "verified",
+        "process_id": "fcn-termsheet-quote-20260917-001",
+        "engine_marker": "cpp_daily_termsheet_eki",
+        "manifest_ref": "evidence/fcn-quote-20260917-001.json"
+      }
+    }
+  ],
+  "display_mode": "detail",
+  "compiler_status": "compiled",
+  "compiler_revision": "fcn-payoff-2026-09-17",
+  "pricing_status": "priced",
+  "source_request_id": "rfq-20260917-001"
+}

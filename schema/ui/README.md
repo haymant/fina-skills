@@ -47,3 +47,12 @@ PY
 The `examples/` directory holds the page fixture (`fcn-rfq.ui.json`) and the workflow fixture it references (`fcn-rfq.workflow.json`), whose steps mirror the current FCN RFQ flow: identity → underlyings → coupon → protection → settlement → pricing → review.
 
 Read [`skills/finap-dev/references/ui-runtime-principles.md`](../../skills/finap-dev/references/ui-runtime-principles.md) for the renderer runtime, flex-block state model, action lifecycle, provenance, and rollout phases.
+
+
+## FCN economics and operation contracts
+
+The UI contract is intentionally split into three related schemas. `ui-metadata.schema.json` defines composition and presentation. `leg-allocation.schema.json` separates editable FCN economics from compiler- and pricing-generated funding, coupon, and terminal-optionality legs. `operation-action.schema.json` defines logical operations, lifecycle preconditions, actor capabilities, refresh targets, expected events, and evidence requirements. Action metadata describes intent; it does not authorize a transition.
+
+The examples demonstrate the intended boundary. `examples/fcn-economics-leg-allocation.json` contains declared and generated FCN legs, while `examples/fcn-quote-price.action.json` describes a native quote operation without exposing MCP routing to browser code.
+
+The implementation guide is [`skills/finap-dev/references/fcn-leg-allocation-and-actions.md`](../../skills/finap-dev/references/fcn-leg-allocation-and-actions.md). It includes the Economics and Payoff Composition workflow, renderer rules, action lifecycle, and a ready-to-use developer handoff prompt.

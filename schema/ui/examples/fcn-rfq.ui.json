@@ -6,6 +6,7 @@
   "title": "FCN RFQ",
   "description": "Schema-driven FCN RFQ capture and quote workflow. Compose a structured request, submit it via the rfq.create logical operation, then price on the Quotes screen.",
   "schema": "trade.rfq-create",
+  "leg_allocation_schema": "leg-allocation",
   "layout": "trading.rfq.fcn-layout",
   "workflow": "fcn.rfq",
   "edit_modes": [

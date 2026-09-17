@@ -1,0 +1,47 @@
+{
+  "registry": "fina/ui",
+  "version": 1,
+  "kind": "action",
+  "id": "trading.fcn.quote-price",
+  "title": "Price FCN RFQ",
+  "description": "Compile the FCN terms and request a native quote without persisting a quote or trade.",
+  "operation": "quote.price",
+  "process": "fcn-termsheet-quote",
+  "input_schema": "pricing-request",
+  "result_schema": "fcn-native-pricing-result",
+  "record_binding": "/rfq",
+  "confirmation_policy": "never",
+  "preconditions": [
+    {
+      "path": "/lifecycle_state",
+      "operator": "in",
+      "value": [
+        "draft",
+        "ready_for_pricing"
+      ],
+      "message": "The RFQ must be ready for pricing."
+    }
+  ],
+  "actor_capability": "trading.quote.price",
+  "idempotency_key_path": "/request_id",
+  "refresh_targets": [
+    "rfq.detail",
+    "quote.preview",
+    "lifecycle.timeline"
+  ],
+  "expected_events": [
+    "quote.priced"
+  ],
+  "evidence_required": true,
+  "lifecycle_states": [
+    "draft",
+    "ready_for_pricing"
+  ],
+  "argument_bindings": [
+    {
+      "input_path": "/",
+      "argument_path": "/pricing_request",
+      "required": true
+    }
+  ]
+}

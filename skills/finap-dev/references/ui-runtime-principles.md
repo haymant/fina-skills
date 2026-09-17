@@ -595,3 +595,35 @@ The same renderer must support both product-terms workflows and RiskCube operati
 8. **The first implementation should target the FCN RFQ/quote flow and one RiskCube scenario flow, not dynamically generate every TradeAC page.**
 
 The target is a **schema-validated React runtime for FinA contracts, layouts, flex-block workflows, lifecycle actions, and execution provenance**.
+
+
+## FCN economics and generated leg allocation
+
+FCN should add an **Economics and Payoff Composition** step after protection and before settlement or pricing. Use semantic flex blocks for Funding, Coupon, Terminal Optionality, and Generated Leg Preview. The canonical leg contract is `schema/ui/leg-allocation.schema.json`.
+
+The first three blocks bind to editable product terms. The preview binds to compiler and pricing results. Do not expose PV, Greeks, `N1`, `N2`, engine markers, payoff graph node IDs, or evidence status as editable controls. Use a rich read-only list or property grid for generated legs, with source term paths, lifecycle conditions, payment schedule, origin, PV, currency, and evidence status.
+
+Use `PUT / Terminal Optionality` as the display label when a RakiPlus-derived FCN has a conditional terminal residual. Do not claim it is a standalone vanilla put unless the product contract proves that interpretation.
+
+The data flow is:
+
+```text
+editable terms → ETL projection and compile → payoff graph and leg allocation
+               → pricing request → native quote/reprice → PVs and evidence
+```
+
+## Operation-action metadata
+
+Use the canonical `schema/ui/operation-action.schema.json` for actions. Action metadata must identify a registered logical operation, input and result schemas, process, record binding, confirmation policy, lifecycle preconditions, actor capability, idempotency binding where needed, refresh targets, expected events, and evidence requirements.
+
+Action metadata describes intent. It never authorizes a lifecycle transition. The authenticated server action must enforce actor capability, state legality, reason requirements, idempotency, and adapter routing. Keep `quote.price`, `quote.reprice`, quote persistence, trade acceptance, amendment, cancellation, knock, and expiry as distinct operations.
+
+The action runtime should perform this sequence:
+
+```text
+resolve metadata → validate input → evaluate visible preconditions
+→ invoke authenticated server adapter → normalize result envelope
+→ publish event/provenance → refresh declared resources
+```
+
+The browser must not choose MCP tools, pricing engines, repositories, or credentials. A price result is not a persisted quote, and a quote is not a trade.

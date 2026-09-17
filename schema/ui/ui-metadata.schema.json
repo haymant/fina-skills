@@ -78,9 +78,41 @@
       "type": "string",
       "minLength": 1
     },
+    "result_schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "leg_allocation_schema": {
+      "type": "string",
+      "minLength": 1
+    },
     "operation": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9]*(\\.[a-z0-9_-]+)+$"
+    },
+    "confirmation_policy": {
+      "enum": [
+        "never",
+        "when_destructive",
+        "always"
+      ]
+    },
+    "preconditions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/precondition"
+      }
+    },
+    "actor_capability": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reason_required": {
+      "type": "boolean"
+    },
+    "idempotency_key_path": {
+      "type": "string",
+      "pattern": "^(/[^/~]*(~[01][^/~]*)*)*$"
     },
     "children": {
       "type": "array",
@@ -165,6 +197,12 @@
         ]
       },
       "uniqueItems": true
+    },
+    "argument_bindings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/argumentBinding"
+      }
     },
     "required": {
       "type": "boolean"
@@ -379,6 +417,54 @@
           ]
         }
       ]
+    },
+    "precondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "operator"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^(/[^/~]*(~[01][^/~]*)*)*$"
+        },
+        "operator": {
+          "enum": [
+            "equals",
+            "in",
+            "exists",
+            "not_equals"
+          ]
+        },
+        "value": {},
+        "message": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "argumentBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input_path",
+        "argument_path"
+      ],
+      "properties": {
+        "input_path": {
+          "type": "string",
+          "pattern": "^(/[^/~]*(~[01][^/~]*)*)*$"
+        },
+        "argument_path": {
+          "type": "string",
+          "pattern": "^(/[^/~]*(~[01][^/~]*)*)*$"
+        },
+        "required": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }

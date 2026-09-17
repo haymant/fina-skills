@@ -14,7 +14,10 @@ Read the relevant reference before changing a feature:
 - `references/business-requirements.md` — product scope, required routes, and acceptance criteria.
 - `references/ui-runtime-principles.md` — schema-driven React renderer, rich arrays, expandable objects, and flex-block workflows.
 - `references/fin-a-boundaries.md` — product, model, process, lifecycle, evidence, and adapter boundaries.
+- `references/fcn-leg-allocation-and-actions.md` — FCN Economics and Payoff Composition, generated funding/coupon/terminal legs, logical operation actions, and the developer handoff prompt.
 - `../../schema/ui/ui-metadata.schema.json` — canonical shape for pages, layouts, workflows, flex blocks, renderer hints, actions, and resources.
+- `../../schema/ui/leg-allocation.schema.json` — canonical separation of editable FCN economics from generated leg allocation and pricing evidence.
+- `../../schema/ui/operation-action.schema.json` — canonical operation-action contract for preconditions, lifecycle gates, refreshes, events, and evidence.
 - `../../schema/ui/examples/fcn-rfq.ui.json` — minimal UI metadata fixture; validate it independently before wiring a page.
 
 ## Repository rules
@@ -34,7 +37,7 @@ Read the relevant reference before changing a feature:
 
 1. Read the applicable business requirement and FinA boundary reference.
 2. Inspect the closest existing screen and shared component before coding.
-3. Define or update the contract and metadata before adding product-specific UI logic.
+3. Define or update the domain contract, leg-allocation contract, and operation-action metadata before adding product-specific UI logic.
 4. Implement the smallest route-owned component that consumes the metadata.
 5. Wire server actions through a logical operation or typed adapter.
 6. Handle loading, empty, error, disabled, validation, and mobile states.
