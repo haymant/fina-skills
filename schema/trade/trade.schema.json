@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/trade/trade.schema.json",
+  "title": "FinA Trade",
+  "description": "An accepted quote represented as a lifecycle-managed trade aggregate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["trade_id", "rfq_id", "accepted_quote_id", "instrument_id", "product_type", "terms", "notional", "currency", "portfolio", "quantity", "status", "created_at", "updated_at"],
+  "properties": {
+    "trade_id": {"type": "string", "minLength": 1},
+    "rfq_id": {"type": "string", "minLength": 1},
+    "accepted_quote_id": {"type": "string", "minLength": 1},
+    "instrument_id": {"type": "string", "minLength": 1},
+    "product_type": {"type": "string", "minLength": 1},
+    "terms": {"type": "object"},
+    "notional": {"type": "number", "exclusiveMinimum": 0},
+    "currency": {"type": "string", "minLength": 3},
+    "portfolio": {"type": "string", "minLength": 1},
+    "quantity": {"type": "number", "exclusiveMinimum": 0},
+    "status": {"enum": ["LIVE", "AMENDED", "CANCELLED", "MATURED", "TERMINATED"]},
+    "lifecycle_state": {"type": "object"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "version": {"type": "integer", "minimum": 1},
+    "last_event_id": {"type": ["string", "null"]}
+  }
+}

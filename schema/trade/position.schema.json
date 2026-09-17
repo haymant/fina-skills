@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/trade/position.schema.json",
+  "title": "FinA Position Projection",
+  "description": "A derived aggregate of non-terminal trades by portfolio and instrument.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["portfolio", "instrument_id", "product_type", "quantity", "notional", "currency", "live_trades", "updated_at"],
+  "properties": {
+    "portfolio": {"type": "string", "minLength": 1},
+    "instrument_id": {"type": "string", "minLength": 1},
+    "product_type": {"type": "string", "minLength": 1},
+    "quantity": {"type": "number"},
+    "notional": {"type": ["number", "string"]},
+    "currency": {"type": "string", "minLength": 3},
+    "live_trades": {"type": "integer", "minimum": 0},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "source_version": {"type": "integer", "minimum": 1}
+  }
+}

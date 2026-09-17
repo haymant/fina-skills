@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/trade/lifecycle-event.schema.json",
+  "title": "FinA Trade Lifecycle Event",
+  "description": "An immutable event recording one committed trade lifecycle transition or market observation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["event_id", "topic", "trade_id", "correlation_id", "occurred_at", "sequence", "before", "after", "payload"],
+  "properties": {
+    "event_id": {"type": "string", "minLength": 1},
+    "topic": {"type": "string", "pattern": "^[a-z][a-z0-9]*(\\.[a-z0-9_-]+)+$"},
+    "trade_id": {"type": "string", "minLength": 1},
+    "correlation_id": {"type": "string", "minLength": 1},
+    "causation_id": {"type": ["string", "null"]},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "sequence": {"type": "integer", "minimum": 1},
+    "actor": {"type": ["object", "null"]},
+    "before": {"type": ["object", "null"]},
+    "after": {"type": "object"},
+    "payload": {"type": "object"},
+    "idempotency_key": {"type": ["string", "null"]}
+  }
+}

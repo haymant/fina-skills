@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/trade/quote.schema.json",
+  "title": "FinA Quote Version",
+  "description": "An immutable quote version linked to an RFQ and instrument.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["quote_id", "rfq_id", "quote_version", "pricing_request", "quote", "instrument_id", "product_type", "status", "quoted_at", "created_at", "updated_at"],
+  "properties": {
+    "quote_id": {"type": "string", "minLength": 1},
+    "rfq_id": {"type": "string", "minLength": 1},
+    "quote_version": {"type": "integer", "minimum": 1},
+    "pricing_request": {"type": "object"},
+    "quote": {"type": "object"},
+    "pv_amount": {"type": ["number", "string", "null"]},
+    "pv_currency": {"type": ["string", "null"], "minLength": 3},
+    "price_pct_of_notional": {"type": ["number", "string", "null"]},
+    "instrument_id": {"type": "string", "minLength": 1},
+    "product_type": {"type": "string", "minLength": 1},
+    "status": {"enum": ["VALID", "ACCEPTED", "EXPIRED", "REJECTED", "CANCELLED"]},
+    "expires_at": {"type": ["string", "null"], "format": "date-time"},
+    "trade_id": {"type": ["string", "null"]},
+    "quoted_at": {"type": "string", "format": "date-time"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "result_reference": {"type": ["object", "null"]}
+  }
+}

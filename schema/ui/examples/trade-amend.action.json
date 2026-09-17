@@ -1,0 +1,33 @@
+{
+  "registry": "fina/ui",
+  "version": 1,
+  "kind": "action",
+  "id": "trading.trade.amend",
+  "title": "Amend trade",
+  "description": "Apply an authorized terms or allocation amendment and emit a lifecycle event.",
+  "operation": "trade.amend",
+  "process": "trade-lifecycle-amend",
+  "input_schema": "trade-amend-command",
+  "result_schema": "trade-lifecycle-result",
+  "record_binding": "/trade",
+  "confirmation_policy": "always",
+  "preconditions": [
+    {
+      "path": "/status",
+      "operator": "in",
+      "value": ["LIVE", "AMENDED"],
+      "message": "Only non-terminal live trades can be amended."
+    }
+  ],
+  "actor_capability": "trading.trade.amend",
+  "reason_required": true,
+  "idempotency_key_path": "/idempotency_key",
+  "refresh_targets": ["trade.detail", "trade.lifecycle", "position.detail", "quote.list"],
+  "expected_events": ["trade.lifecycle.amended"],
+  "evidence_required": true,
+  "lifecycle_states": ["LIVE", "AMENDED"],
+  "argument_bindings": [
+    {"input_path": "/trade_id", "argument_path": "/trade_id", "required": true},
+    {"input_path": "/changes", "argument_path": "/changes", "required": true}
+  ]
+}

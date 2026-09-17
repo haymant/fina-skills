@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/trade/market-operation.schema.json",
+  "title": "FinA Trade Market Operation",
+  "description": "A command to apply a lifecycle, fixing, corporate-action, or settlement operation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["operation_id", "operation", "trade_id", "as_of", "idempotency_key", "actor", "input"],
+  "properties": {
+    "operation_id": {"type": "string", "minLength": 1},
+    "operation": {"enum": ["REGISTER", "AMEND", "RECORD_FIXING", "APPLY_CORPORATE_EVENT", "TRIGGER_KNOCK_IN", "TRIGGER_KNOCK_OUT", "DETERMINE_COUPON", "EXPIRE", "EXERCISE", "SETTLE", "CANCEL", "TERMINATE"]},
+    "trade_id": {"type": "string", "minLength": 1},
+    "as_of": {"type": "string", "format": "date"},
+    "idempotency_key": {"type": "string", "minLength": 1},
+    "actor": {"$ref": "#/$defs/actor"},
+    "input": {"type": "object"},
+    "expected_state_version": {"type": "integer", "minimum": 1},
+    "correlation_id": {"type": ["string", "null"]},
+    "causation_id": {"type": ["string", "null"]}
+  },
+  "$defs": {
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id"],
+      "properties": {
+        "type": {"enum": ["agent", "scheduler", "market-data", "operations", "system"]},
+        "id": {"type": "string", "minLength": 1},
+        "capability": {"type": ["string", "null"]}
+      }
+    }
+  }
+}

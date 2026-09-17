@@ -1,0 +1,33 @@
+{
+  "registry": "fina/ui",
+  "version": 1,
+  "kind": "action",
+  "id": "trading.trade.record-fixing",
+  "title": "Record fixing",
+  "description": "Record an immutable market fixing and apply the product decision to the trade lifecycle.",
+  "operation": "trade.record-fixing",
+  "process": "trade-market-fixing",
+  "input_schema": "fixing-record",
+  "result_schema": "trade-fixing-result",
+  "record_binding": "/trade",
+  "confirmation_policy": "always",
+  "preconditions": [
+    {
+      "path": "/status",
+      "operator": "in",
+      "value": ["LIVE", "AMENDED"],
+      "message": "The trade must be live for a fixing."
+    }
+  ],
+  "actor_capability": "market-data.trade.fixing",
+  "idempotency_key_path": "/idempotency_key",
+  "refresh_targets": ["trade.detail", "trade.fixings", "trade.lifecycle", "position.detail", "quote.list"],
+  "expected_events": ["trade.lifecycle.fixed", "trade.lifecycle.knocked"],
+  "evidence_required": true,
+  "lifecycle_states": ["LIVE", "AMENDED"],
+  "argument_bindings": [
+    {"input_path": "/trade_id", "argument_path": "/trade_id", "required": true},
+    {"input_path": "/fixing_date", "argument_path": "/as_of", "required": true},
+    {"input_path": "/", "argument_path": "/input/fixing_record", "required": true}
+  ]
+}

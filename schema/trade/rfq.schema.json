@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fina.local/schema/trade/rfq.schema.json",
+  "title": "FinA RFQ",
+  "description": "A received request for an equity-derivative quote.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rfq_id", "correlation_id", "instrument_id", "product_type", "request", "status", "received_at", "updated_at"],
+  "properties": {
+    "rfq_id": {"type": "string", "minLength": 1},
+    "correlation_id": {"type": "string", "minLength": 1},
+    "client_id": {"type": ["string", "null"]},
+    "instrument_id": {"type": "string", "minLength": 1},
+    "product_type": {"type": "string", "minLength": 1},
+    "request": {"type": "object"},
+    "status": {"enum": ["RECEIVED", "QUOTED", "CONVERTED", "EXPIRED", "CANCELLED"]},
+    "received_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "version": {"type": "integer", "minimum": 1}
+  }
+}
