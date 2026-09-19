@@ -50,6 +50,18 @@
     "terms": {
       "$ref": "#/$defs/versionedContract"
     },
+    "payoff_graph": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "schema": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "fixture": {"type": "string", "minLength": 1},
+        "emitter": {"type": "string", "minLength": 1},
+        "lowerings": {"type": "object", "additionalProperties": true},
+        "kernel_bindings": {"type": "string"}
+      }
+    },
     "pricing_request": {
       "$ref": "#/$defs/versionedContract"
     },

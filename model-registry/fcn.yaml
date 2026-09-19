@@ -83,6 +83,16 @@ terms:
       memory_coupon: engine_evidenced
       memory_ko: terms_and_ui_supported_engine_pending
     accrual_indicator: [all, any]
+payoff_graph:
+  schema: payoff-graph.schema.json
+  version: fina/payoff-graph/v1
+  fixture: schema/examples/fcn/pricing/payoff-graph.example.json
+  emitter: modules/fina-core/python/fina_core/payoff.py::compile_payoff_graph
+  lowerings:
+    fcn_terms: modules/fina-core/python/fina_core/payoff.py::lower_payoff_graph_to_fcn_terms
+    pricing_request: modules/fina-core/python/fina_core/payoff.py::lower_payoff_graph_to_pricing_request
+    enriched_request: modules/fina-core/python/fina_core/payoff.py::enrich_pricing_request
+  kernel_bindings: "function_bindings (fina_risk_cpp modules: schedule.hpp, terminal_option.hpp, coupon.hpp, barriers.hpp, funding.hpp, settlement.hpp, engine.hpp)"
 pricing_request:
   schema: pricing-request.schema.json
   version: reviewed-v1

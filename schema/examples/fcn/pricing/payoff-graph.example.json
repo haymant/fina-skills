@@ -1,5 +1,480 @@
 {
-  "instrument_key": "{'timestamp': 1788746776, 'date': 1788746776000}-00000-00000",
+  "schema_version": "fina/payoff-graph/v1",
+  "graph_id": "ELIFCN-ELIFCN_KI",
+  "graph_type": "PAYOFF",
+  "graph_hash": "7bb6e52f671cf080af91dd7e6a966eff09413a4b70d73a64bf4d2d4092eabc55",
+  "product": {
+    "family": "fcn",
+    "type": "ELIFCN_KI",
+    "template": "ELIFCN_KI",
+    "version": 1,
+    "model_id": "memraki",
+    "payoff_script_name": "ELIFCN_KI"
+  },
+  "source_ref": {
+    "product_terms_schema": "fina/fcn-terms-projection/v1",
+    "terms_version": "pending-freeze",
+    "market_snapshot_ref": "market@46272",
+    "lifecycle_ref": null,
+    "legacy_refs": "../source/termsheet1.fcn.sample.json"
+  },
+  "currency": "USD",
+  "notional": 50000.0,
+  "coupon_quote_scale": 10.0,
+  "performance": {
+    "indicator": "worst_of",
+    "basis": "close_over_initial_spot"
+  },
+  "dates": {
+    "evaluation_date": 46272,
+    "final_fixing_date": 46419,
+    "maturity_date": 46421
+  },
+  "reference_spots": [
+    239.97,
+    260.0
+  ],
+  "schedule": {
+    "calendar": "NYSE",
+    "observation_frequency": "daily",
+    "evaluation_date": "2026-08-21",
+    "last_fixing_date": "2026-08-21"
+  },
+  "lifecycle": {
+    "already_knock_in": false,
+    "memory_carry": true,
+    "locked": null
+  },
+  "coupon": {
+    "type": "range_accrual_strip",
+    "indicator": "WPS",
+    "rate": 0.00713,
+    "memory_carry": true,
+    "unpaid_period_rule": "N2-N1",
+    "payment_lag_days": [
+      4,
+      2,
+      2,
+      2,
+      2
+    ]
+  },
+  "legs": [
+    {
+      "leg_id": 1,
+      "role": "ki_put",
+      "name": "PUT",
+      "multiplier": -1.0,
+      "notional": 50000.0,
+      "payoff_node": "down_and_in_put"
+    },
+    {
+      "leg_id": 3,
+      "role": "funding",
+      "name": "FUNDING",
+      "multiplier": 1.0,
+      "notional": 50000.0,
+      "payoff_node": "notional_return"
+    },
+    {
+      "leg_id": 2,
+      "role": "coupon",
+      "name": "COUPON",
+      "multiplier": 1.0,
+      "notional": 50000.0,
+      "payoff_node": "coupon_strip"
+    }
+  ],
+  "nodes": [
+    {
+      "node_id": "fixing_schedule",
+      "kind": "fixing_schedule",
+      "label": "NYSE fixing schedule",
+      "config": {
+        "calendar": "NYSE",
+        "observation_frequency": "daily"
+      },
+      "kernel": {
+        "node_kind": "fixing_schedule",
+        "module": "fina_risk_cpp",
+        "symbol": "fina::risk::fcn::observation_on_or_before",
+        "header": "modules/fina-risk/cpp/include/fina_risk/schedule.hpp",
+        "engine_marker": "cpp_daily_termsheet_eki"
+      }
+    },
+    {
+      "node_id": "worst_of_performance",
+      "kind": "worst_of_performance",
+      "label": "worst-of close / initial spot across basket",
+      "config": {
+        "indicator": "worst_of",
+        "basis": "close_over_initial_spot"
+      },
+      "kernel": {
+        "node_kind": "worst_of_performance",
+        "module": "fina_risk_cpp",
+        "symbol": "fina::risk::fcn::price",
+        "header": "modules/fina-risk/cpp/include/fina_risk/engine.hpp",
+        "engine_marker": "cpp_daily_termsheet_eki"
+      }
+    },
+    {
+      "node_id": "knock_in_gate",
+      "kind": "knock_in_gate",
+      "label": "European knock-in at final fixing",
+      "config": {
+        "barrier": 0.7,
+        "operator": "<=",
+        "monitoring": "EKI",
+        "scope": "final_fixing",
+        "final_fixing_eki": true
+      },
+      "kernel": {
+        "node_kind": "knock_in_gate",
+        "module": "fina_risk_cpp",
+        "symbol": "fina::risk::fcn::update_knock_in",
+        "header": "modules/fina-risk/cpp/include/fina_risk/terminal_option.hpp",
+        "engine_marker": "cpp_daily_termsheet_eki"
+      }
+    },
+    {
+      "node_id": "global_ko_gate",
+      "kind": "global_ko_gate",
+      "label": "global call/KO at all-underlyings >= barrier",
+      "config": {
+        "barrier": 1.1,
+        "operator": ">=",
+        "style": "american",
+        "memory_ko": false,
+        "enabled": false
+      },
+      "kernel": {
+        "node_kind": "global_ko_gate",
+        "module": "fina_risk_cpp",
+        "symbol": "fina::risk::fcn::resolve_ko",
+        "header": "modules/fina-risk/cpp/include/fina_risk/barriers.hpp",
+        "engine_marker": "cpp_daily_termsheet_eki"
+      }
+    },
+    {
+      "node_id": "coupon_strip",
+      "kind": "coupon_strip",
+      "label": "range-accrual coupon strip with memory carry",
+      "config": {
+        "indicator": "WPS",
+        "rate": 0.00713,
+        "memory_carry": true,
+        "unpaid_period_rule": "N2-N1",
+        "periods": [
+          {
+            "period": 6,
+            "start_date": 46272,
+            "end_date": 46296,
+            "payment_date": 46300,
+            "range_rate": 0.009642,
+            "fixed_coupon": 0.0,
+            "lower_bound": 0.1,
+            "upper_bound": 999.99,
+            "already_paid_fixings": 0,
+            "total_fixings": 21
+          },
+          {
+            "period": 7,
+            "start_date": 46296,
+            "end_date": 46328,
+            "payment_date": 46330,
+            "range_rate": 0.009642,
+            "fixed_coupon": 0.0,
+            "lower_bound": 0.1,
+            "upper_bound": 999.99,
+            "already_paid_fixings": 0,
+            "total_fixings": 22
+          },
+          {
+            "period": 8,
+            "start_date": 46328,
+            "end_date": 46357,
+            "payment_date": 46359,
+            "range_rate": 0.009642,
+            "fixed_coupon": 0.0,
+            "lower_bound": 0.1,
+            "upper_bound": 999.99,
+            "already_paid_fixings": 0,
+            "total_fixings": 20
+          },
+          {
+            "period": 9,
+            "start_date": 46357,
+            "end_date": 46391,
+            "payment_date": 46393,
+            "range_rate": 0.009642,
+            "fixed_coupon": 0.0,
+            "lower_bound": 0.1,
+            "upper_bound": 999.99,
+            "already_paid_fixings": 0,
+            "total_fixings": 22
+          },
+          {
+            "period": 10,
+            "start_date": 46391,
+            "end_date": 46419,
+            "payment_date": 46421,
+            "range_rate": 0.009642,
+            "fixed_coupon": 0.0,
+            "lower_bound": 0.1,
+            "upper_bound": 999.99,
+            "already_paid_fixings": 0,
+            "total_fixings": 19
+          }
+        ]
+      },
+      "kernel": {
+        "node_kind": "coupon_strip",
+        "module": "fina_risk_cpp",
+        "symbol": "fina::risk::fcn::period_rate",
+        "header": "modules/fina-risk/cpp/include/fina_risk/coupon.hpp",
+        "engine_marker": "cpp_daily_termsheet_eki"
+      }
+    },
+    {
+      "node_id": "memory_carry",
+      "kind": "memory_carry",
+      "label": "unpaid fixing memory carried into later periods",
+      "config": {
+        "denominator": "N2",
+        "per_period": true
+      },
+      "kernel": {
+        "node_kind": "memory_carry",
+        "module": "fina_risk_cpp",
+        "symbol": "fina::risk::fcn::next_memory",
+        "header": "modules/fina-risk/cpp/include/fina_risk/coupon.hpp",
+        "engine_marker": "cpp_daily_termsheet_eki"
+      }
+    },
+    {
+      "node_id": "down_and_in_put",
+      "kind": "down_and_in_put",
+      "label": "worst-of down-and-in put at final fixing",
+      "config": {
+        "strike": 0.78,
+        "ki_enabled": true,
+        "settlement": "physical_delivery"
+      },
+      "kernel": {
+        "node_kind": "down_and_in_put",
+        "module": "fina_risk_cpp",
+        "symbol": "fina::risk::fcn::terminal_option_payoff",
+        "header": "modules/fina-risk/cpp/include/fina_risk/terminal_option.hpp",
+        "engine_marker": "cpp_daily_termsheet_eki"
+      }
+    },
+    {
+      "node_id": "notional_return",
+      "kind": "notional_return",
+      "label": "notional redemption at par",
+      "config": {
+        "return_ratio": 1.0,
+        "enabled": true
+      },
+      "kernel": {
+        "node_kind": "notional_return",
+        "module": "fina_risk_cpp",
+        "symbol": "fina::risk::fcn::funding_amount",
+        "header": "modules/fina-risk/cpp/include/fina_risk/funding.hpp",
+        "engine_marker": "cpp_daily_termsheet_eki"
+      }
+    },
+    {
+      "node_id": "physical_delivery_settlement",
+      "kind": "physical_delivery_settlement",
+      "label": "worst-asset physical delivery after knock-in",
+      "config": {
+        "delivery_type": "physical",
+        "itm_payment": "delivery",
+        "enabled": true
+      },
+      "kernel": {
+        "node_kind": "physical_delivery_settlement",
+        "module": "fina_risk_cpp",
+        "symbol": "fina::risk::fcn::settlement_for",
+        "header": "modules/fina-risk/cpp/include/fina_risk/settlement.hpp",
+        "engine_marker": "cpp_daily_termsheet_eki"
+      }
+    },
+    {
+      "node_id": "payment_discount",
+      "kind": "payment_discount",
+      "label": "payment-date discounting",
+      "config": {
+        "curve": "USD Std Curve",
+        "day_count": "Actual/365"
+      },
+      "kernel": {
+        "node_kind": "payment_discount",
+        "module": "fina_risk_cpp",
+        "symbol": "fina::risk::fcn::price",
+        "header": "modules/fina-risk/cpp/include/fina_risk/engine.hpp",
+        "engine_marker": "cpp_daily_termsheet_eki"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "fixing_schedule",
+      "to": "worst_of_performance",
+      "role": "feeds"
+    },
+    {
+      "from": "worst_of_performance",
+      "to": "knock_in_gate",
+      "role": "feeds"
+    },
+    {
+      "from": "worst_of_performance",
+      "to": "global_ko_gate",
+      "role": "feeds"
+    },
+    {
+      "from": "worst_of_performance",
+      "to": "coupon_strip",
+      "role": "feeds"
+    },
+    {
+      "from": "knock_in_gate",
+      "to": "down_and_in_put",
+      "role": "activates"
+    },
+    {
+      "from": "global_ko_gate",
+      "to": "down_and_in_put",
+      "role": "terminates"
+    },
+    {
+      "from": "global_ko_gate",
+      "to": "coupon_strip",
+      "role": "terminates"
+    },
+    {
+      "from": "coupon_strip",
+      "to": "memory_carry",
+      "role": "feeds"
+    },
+    {
+      "from": "down_and_in_put",
+      "to": "physical_delivery_settlement",
+      "role": "activates"
+    },
+    {
+      "from": "down_and_in_put",
+      "to": "payment_discount",
+      "role": "discounts"
+    },
+    {
+      "from": "notional_return",
+      "to": "payment_discount",
+      "role": "discounts"
+    },
+    {
+      "from": "coupon_strip",
+      "to": "payment_discount",
+      "role": "discounts"
+    }
+  ],
+  "payoff_script": "worst-of { - put(EKI 0.7, strike 0.78, physical_delivery); + notional_return(1x); + coupon_strip(0.00713, WPS, N2-N1, memory) }    gates: EKI(0.7, final_fixing)",
+  "function_bindings": [
+    {
+      "node_kind": "fixing_schedule",
+      "module": "fina_risk_cpp",
+      "symbol": "fina::risk::fcn::observation_on_or_before",
+      "header": "modules/fina-risk/cpp/include/fina_risk/schedule.hpp",
+      "engine_marker": "cpp_daily_termsheet_eki"
+    },
+    {
+      "node_kind": "worst_of_performance",
+      "module": "fina_risk_cpp",
+      "symbol": "fina::risk::fcn::price",
+      "header": "modules/fina-risk/cpp/include/fina_risk/engine.hpp",
+      "engine_marker": "cpp_daily_termsheet_eki"
+    },
+    {
+      "node_kind": "knock_in_gate",
+      "module": "fina_risk_cpp",
+      "symbol": "fina::risk::fcn::update_knock_in",
+      "header": "modules/fina-risk/cpp/include/fina_risk/terminal_option.hpp",
+      "engine_marker": "cpp_daily_termsheet_eki"
+    },
+    {
+      "node_kind": "down_and_in_put",
+      "module": "fina_risk_cpp",
+      "symbol": "fina::risk::fcn::terminal_option_payoff",
+      "header": "modules/fina-risk/cpp/include/fina_risk/terminal_option.hpp",
+      "engine_marker": "cpp_daily_termsheet_eki"
+    },
+    {
+      "node_kind": "global_ko_gate",
+      "module": "fina_risk_cpp",
+      "symbol": "fina::risk::fcn::resolve_ko",
+      "header": "modules/fina-risk/cpp/include/fina_risk/barriers.hpp",
+      "engine_marker": "cpp_daily_termsheet_eki"
+    },
+    {
+      "node_kind": "local_ko_gate",
+      "module": "fina_risk_cpp",
+      "symbol": "fina::risk::fcn::resolve_ko",
+      "header": "modules/fina-risk/cpp/include/fina_risk/barriers.hpp",
+      "engine_marker": "cpp_daily_termsheet_eki"
+    },
+    {
+      "node_kind": "range_accrual",
+      "module": "fina_risk_cpp",
+      "symbol": "fina::risk::fcn::in_range",
+      "header": "modules/fina-risk/cpp/include/fina_risk/coupon.hpp",
+      "engine_marker": "cpp_daily_termsheet_eki"
+    },
+    {
+      "node_kind": "coupon_strip",
+      "module": "fina_risk_cpp",
+      "symbol": "fina::risk::fcn::period_rate",
+      "header": "modules/fina-risk/cpp/include/fina_risk/coupon.hpp",
+      "engine_marker": "cpp_daily_termsheet_eki"
+    },
+    {
+      "node_kind": "memory_carry",
+      "module": "fina_risk_cpp",
+      "symbol": "fina::risk::fcn::next_memory",
+      "header": "modules/fina-risk/cpp/include/fina_risk/coupon.hpp",
+      "engine_marker": "cpp_daily_termsheet_eki"
+    },
+    {
+      "node_kind": "notional_return",
+      "module": "fina_risk_cpp",
+      "symbol": "fina::risk::fcn::funding_amount",
+      "header": "modules/fina-risk/cpp/include/fina_risk/funding.hpp",
+      "engine_marker": "cpp_daily_termsheet_eki"
+    },
+    {
+      "node_kind": "cash_settlement",
+      "module": "fina_risk_cpp",
+      "symbol": "fina::risk::fcn::settlement_for",
+      "header": "modules/fina-risk/cpp/include/fina_risk/settlement.hpp",
+      "engine_marker": "cpp_daily_termsheet_eki"
+    },
+    {
+      "node_kind": "physical_delivery_settlement",
+      "module": "fina_risk_cpp",
+      "symbol": "fina::risk::fcn::settlement_for",
+      "header": "modules/fina-risk/cpp/include/fina_risk/settlement.hpp",
+      "engine_marker": "cpp_daily_termsheet_eki"
+    },
+    {
+      "node_kind": "payment_discount",
+      "module": "fina_risk_cpp",
+      "symbol": "fina::risk::fcn::price",
+      "header": "modules/fina-risk/cpp/include/fina_risk/engine.hpp",
+      "engine_marker": "cpp_daily_termsheet_eki"
+    }
+  ],
   "market_data": {
     "evaluation_date": 46272,
     "underlyings": [
@@ -689,69 +1164,27 @@
     "seed": 1729,
     "common_random_numbers": true,
     "paths": 30000,
-    "steps": 252
+    "steps": 252,
+    "monitoring_frequency": "daily"
   },
-  "common_economics": {
-    "notional": 100000.0,
-    "payment_currency": "USD",
+  "provenance": {
+    "legacy_product_name": "ELIFCN",
+    "legacy_product_template": "ELIFCN_KI",
+    "legacy_initial_fixing_date": "2026-04-24",
     "underlyings": [
       "ADBE UW",
       "AMZN UW"
     ],
-    "product_type": "ELIFCN"
-  },
-  "legs": [
-    {
-      "leg_id": 1,
-      "leg_type": "intrinsic_option",
-      "leg_name": "PUT",
-      "multiplier": -1,
-      "notional": 100000.0,
-      "payoff": {
-        "basket": "worst_of",
-        "strike": 0.787492,
-        "knock_in": {
-          "monitoring": "EKI",
-          "barrier": 0.681836
-        },
-        "settlement": "physical_delivery"
-      }
-    },
-    {
-      "leg_id": 3,
-      "leg_type": "funding",
-      "leg_name": "FUNDING",
-      "multiplier": 1,
-      "notional": 100000.0,
-      "payoff": {
-        "notional_return": true,
-        "return_ratio": 1.0
-      }
-    },
-    {
-      "leg_id": 2,
-      "leg_type": "coupon",
-      "leg_name": "COUPON",
-      "multiplier": 1,
-      "notional": 100000.0,
-      "payoff": {
-        "type": "range_accrual_strip",
-        "indicator": "WPS",
-        "rate": 0.00713,
-        "unpaid_period_rule": "N2-N1",
-        "payment_lag_days": [
-          2,
-          2,
-          2,
-          2,
-          2,
-          2,
-          2,
-          2,
-          2,
-          2
-        ]
-      }
+    "reference_prices": [
+      239.97,
+      260.0
+    ],
+    "knock_in_type": "EKI",
+    "source_contract": "fcn-legacy-termsheet.schema.json",
+    "coupon_rate_note": {
+      "semantic_coupon_rate": 0.00713,
+      "period_range_rate": 0.009642,
+      "detail": "semantic/compiled rate diverges from legacy RGACCLKO accruRate; engine periods carry the legacy per-period rate"
     }
-  ]
+  }
 }

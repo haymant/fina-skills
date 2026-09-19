@@ -5,11 +5,18 @@ This example is intentionally split into five boundaries, following the Murex pr
 ```text
 legacy term sheet
   → semantic terms projection
+  → canonical payoff graph
   → compiled pricing request
   → native pricing result
   → executable FinaProcess
   → lifecycle and OLAP evidence
 ```
+
+The **canonical payoff graph** ([`pricing/payoff-graph.example.json`](pricing/payoff-graph.example.json)) is the
+explicit compiled-pricing bridge between the semantic terms and the engine request. It is a typed DAG of
+payoff nodes, gates, legs, schedule, lifecycle, and C++ kernel bindings, emitted by fina-core's
+`compile_payoff_graph` and lowered to `FcnTerms` and the compiled `pricing-request` shape (see
+`modules/fina-core/python/fina_core/payoff.py` and [`payoff-graph.schema.json`](../../payoff-graph.schema.json)).
 
 ## Directory map
 
@@ -18,7 +25,7 @@ legacy term sheet
 | [`source/`](source/) | Legacy `Chunk → Jobs → commonData` input copied from `fina-risk` | [`schema/fcn-legacy-termsheet.schema.json`](../../fcn-legacy-termsheet.schema.json) |
 | [`terms/`](terms/) | Explicit semantic projection used to explain product meaning | [`schema/fcn-terms-projection.schema.json`](../../fcn-terms-projection.schema.json) |
 | [`etl/`](etl/) | Real MCP `augment` and `compile` outputs captured from the E2E | [`schema/fcn-etl-result.schema.json`](../../fcn-etl-result.schema.json) |
-| [`pricing/`](pricing/) | Compiled engine request and native quote/reprice payloads | [`schema/pricing-request.schema.json`](../../pricing-request.schema.json), [`schema/fcn-native-pricing-result.schema.json`](../../fcn-native-pricing-result.schema.json) |
+| [`pricing/`](pricing/) | Compiled payloads: canonical payoff graph, engine request, and native quote/reprice payloads | [`schema/payoff-graph.schema.json`](../../payoff-graph.schema.json), [`schema/pricing-request.schema.json`](../../pricing-request.schema.json), [`schema/fcn-native-pricing-result.schema.json`](../../fcn-native-pricing-result.schema.json) |
 | [`process/`](process/) | Executable scheduler graph | [`schema/fina-process.schema.json`](../../fina-process.schema.json) |
 | [`lifecycle/`](lifecycle/) | State, event, transition, fixing, and operation contracts | The five `fcn-*.schema.json` lifecycle schemas |
 | [`evidence/`](evidence/) | Human-readable run/evidence notes | Runtime manifest is written outside the repository by default |
@@ -56,8 +63,14 @@ The offline contract chain can be checked without services:
 
 ```bash
 python schema/examples/fcn/verify_fcn_examples.py
+python schema/examples/fcn/pricing/verify_payoff_graph.py
 python schema/examples/fcn/lifecycle/verify_lifecycle.py
 ```
+
+`verify_payoff_graph.py` re-runs `compile_fcn_graph_and_lower` on the projection, legacy term-sheet, and market
+fixtures and asserts the emitted graph is byte-identical to the checked-in example (`graph_hash`), that the
+`payoff_script` and `function_bindings` explain the fina_risk_cpp function organization, and that the lowered
+`pricing_request` still conforms to the canonical request schema.
 
 The real service-backed E2E is:
 

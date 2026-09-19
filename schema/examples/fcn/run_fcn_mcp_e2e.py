@@ -12,14 +12,21 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-import numpy as np
-
 HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[2]
-FINA_ROOT = REPO_ROOT.parent / "FinA"
-RISK_ROOT = REPO_ROOT.parent / "fina-risk"
-TRADE_ROOT = REPO_ROOT.parent / "fina-trade"
-for path in (FINA_ROOT / "python", TRADE_ROOT, RISK_ROOT / "src"):
+
+
+def module_root(name: str) -> Path:
+    """Monorepo ``modules/`` layout first, legacy sibling-repo layout as fallback."""
+    candidate = REPO_ROOT / "modules" / name
+    return candidate if candidate.exists() else REPO_ROOT.parent / name
+
+
+FINA_ROOT = module_root("fina-core")
+RISK_ROOT = module_root("fina-risk")
+TRADE_ROOT = module_root("fina-trade")
+CORE_PY = FINA_ROOT / "python" if (FINA_ROOT / "python").exists() else FINA_ROOT
+for path in (CORE_PY, TRADE_ROOT, RISK_ROOT / "src"):
     sys.path.insert(0, str(path))
 sys.path.insert(0, str(RISK_ROOT / "cpp" / "build"))
 
@@ -27,8 +34,8 @@ from fina_core.integrations import register_fina_handlers
 from fina_core.process_scheduler import SchedulerService
 from fina_core.process_scheduler import render_parameters
 from fina_risk import mcp
+from fina_risk.daily_termsheet import capture_native_quote
 from fina_trade import TradeRepository
-import fina_risk_cpp
 
 
 def unwrap(value: Any) -> dict[str, Any]:
@@ -104,7 +111,6 @@ def run(termsheet_path: Path, count: int, seed: int, paths: int, artifacts_dir: 
 
     with tempfile.TemporaryDirectory(prefix="fina-fcn-etl-") as work:
         work_dir = Path(work)
-        native_cube: dict[str, Any] = {}
 
         def augment(thread: Any, runtime: SchedulerService) -> dict[str, Any]:
             etl_calls.append("run_etl_task:augment")
@@ -152,37 +158,7 @@ def run(termsheet_path: Path, count: int, seed: int, paths: int, artifacts_dir: 
             pricing_calls.append("pricing_and_sensitivity")
             compile_result = runtime.result(thread.process_id, "compile")
             legacy = json.loads(Path(compile_result["legacy_termsheet_path"]).read_text(encoding="utf-8"))
-            if not native_cube:
-                cube_path = work_dir / "daily-paths.bin"
-                try:
-                    subprocess.run(
-                        [
-                            sys.executable,
-                            str(RISK_ROOT / "scripts" / "generate_daily_paths.py"),
-                            str(compile_result["legacy_termsheet_path"]),
-                            str(cube_path),
-                            "--paths",
-                            str(paths),
-                            "--seed",
-                            str(seed),
-                        ],
-                        check=True,
-                        capture_output=True,
-                        text=True,
-                    )
-                except subprocess.CalledProcessError as exc:
-                    raise RuntimeError(f"daily path generation failed: {exc.stderr.strip()}") from exc
-                meta = json.loads(Path(str(cube_path) + ".meta.json").read_text(encoding="utf-8"))
-                native_cube.update(
-                    paths=np.fromfile(cube_path, dtype=np.float64).reshape(meta["paths"], meta["observations"], meta["underlyings"]),
-                    dates=np.asarray(meta["dates"], dtype=np.int32),
-                    calendar=meta["calendar"],
-                )
-            native = json.loads(
-                fina_risk_cpp.run_daily_termsheet(
-                    json.dumps(legacy), native_cube["paths"], native_cube["dates"], 0.01
-                )
-            )
+            native = capture_native_quote(compile_result["legacy_termsheet_path"], paths=paths, seed=seed)
             if native.get("engine") != "cpp_daily_termsheet_eki":
                 raise AssertionError(f"native C++ engine marker missing: {native.get('engine')!r}")
             if pricing_artifacts_dir:

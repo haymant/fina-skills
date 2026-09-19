@@ -1,0 +1,265 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "payoff-graph.schema.json",
+  "title": "FCN Payoff Graph",
+  "description": "Canonical compiled pricing representation: the semantic PACF-style payoff graph for one instrument. Emitted by fina-core from ProductTerms/semantic terms plus a MarketSnapshot and LifecycleState; lowered to the engine-facing pricing-request and the enriched (InstrumentKey/UnwindMapRaw/RiskFactorKeys) request. The kernel bindings declare the fina-risk C++ function organization each node is evaluated by.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "graph_id",
+    "graph_type",
+    "product",
+    "currency",
+    "notional",
+    "performance",
+    "dates",
+    "legs",
+    "nodes",
+    "edges",
+    "payoff_script",
+    "function_bindings"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "fina/payoff-graph/v1"
+    },
+    "graph_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "graph_type": {
+      "const": "PAYOFF"
+    },
+    "graph_hash": {
+      "type": "string"
+    },
+    "product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["family", "type", "template", "version", "model_id", "payoff_script_name"],
+      "properties": {
+        "family": {"const": "fcn"},
+        "type": {"type": "string", "minLength": 1},
+        "template": {"type": "string", "minLength": 1},
+        "version": {"type": "integer", "minimum": 1},
+        "model_id": {"type": "string", "minLength": 1},
+        "payoff_script_name": {"type": "string", "minLength": 1}
+      }
+    },
+    "source_ref": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "product_terms_schema": {"type": "string"},
+        "terms_version": {"type": "string"},
+        "market_snapshot_ref": {"type": ["string", "null"]},
+        "lifecycle_ref": {"type": ["string", "null"]},
+        "legacy_refs": {"additionalProperties": true}
+      }
+    },
+    "currency": {"type": "string", "minLength": 3},
+    "notional": {"type": "number", "exclusiveMinimum": 0},
+    "coupon_quote_scale": {"type": "number"},
+    "performance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["indicator", "basis"],
+      "properties": {
+        "indicator": {"const": "worst_of"},
+        "basis": {"const": "close_over_initial_spot"}
+      }
+    },
+    "dates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evaluation_date", "final_fixing_date", "maturity_date"],
+      "properties": {
+        "evaluation_date": {"type": ["integer", "string"]},
+        "final_fixing_date": {"type": ["integer", "string"]},
+        "maturity_date": {"type": ["integer", "string"]}
+      }
+    },
+    "reference_spots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "number", "exclusiveMinimum": 0}
+    },
+    "schedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["calendar", "observation_frequency", "evaluation_date", "last_fixing_date"],
+      "properties": {
+        "calendar": {"type": "string", "minLength": 1},
+        "observation_frequency": {"enum": ["daily", "business_daily", "periodic"]},
+        "evaluation_date": {"type": ["integer", "string"]},
+        "last_fixing_date": {"type": ["integer", "string"]}
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["already_knock_in", "memory_carry"],
+      "properties": {
+        "already_knock_in": {"type": "boolean"},
+        "memory_carry": {"type": "boolean"},
+        "locked": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["underlying", "locked", "date"],
+            "properties": {
+              "underlying": {"type": "string"},
+              "locked": {"type": "boolean"},
+              "date": {"type": ["integer", "string", "null"]}
+            }
+          }
+        }
+      }
+    },
+    "coupon": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "indicator", "rate", "memory_carry", "unpaid_period_rule"],
+      "properties": {
+        "type": {"const": "range_accrual_strip"},
+        "indicator": {"type": "string", "minLength": 1},
+        "rate": {"type": "number"},
+        "memory_carry": {"type": "boolean"},
+        "unpaid_period_rule": {"type": "string"},
+        "payment_lag_days": {
+          "type": "array",
+          "items": {"type": "integer"}
+        }
+      }
+    },
+    "legs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["leg_id", "role", "name", "multiplier", "notional", "payoff_node"],
+        "properties": {
+          "leg_id": {"type": ["integer", "string"]},
+          "role": {"enum": ["funding", "coupon", "ki_put", "custom"]},
+          "name": {"type": "string", "minLength": 1},
+          "multiplier": {"type": "number"},
+          "notional": {"type": "number", "exclusiveMinimum": 0},
+          "payoff_node": {"type": "string"},
+          "state": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["node_id", "kind", "label"],
+        "properties": {
+          "node_id": {"type": "string"},
+          "kind": {
+            "enum": [
+              "fixing_schedule",
+              "worst_of_performance",
+              "knock_in_gate",
+              "global_ko_gate",
+              "local_ko_gate",
+              "coupon_strip",
+              "range_accrual",
+              "memory_carry",
+              "down_and_in_put",
+              "notional_return",
+              "cash_settlement",
+              "physical_delivery_settlement",
+              "payment_discount"
+            ]
+          },
+          "label": {"type": "string", "minLength": 1},
+          "config": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "kernel": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["module", "symbol", "header"],
+            "properties": {
+              "node_kind": {"type": "string"},
+              "module": {"type": "string"},
+              "symbol": {"type": "string"},
+              "header": {"type": "string"},
+              "engine_marker": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "to", "role"],
+        "properties": {
+          "from": {"type": "string"},
+          "to": {"type": "string"},
+          "role": {
+            "enum": ["feeds", "gates", "activates", "terminates", "discounts", "aggregates"]
+          }
+        }
+      }
+    },
+    "payoff_script": {
+      "type": "string",
+      "minLength": 1
+    },
+    "function_bindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["node_kind", "module", "symbol", "header", "engine_marker"],
+        "properties": {
+          "node_kind": {"type": "string"},
+          "module": {"type": "string"},
+          "symbol": {"type": "string"},
+          "header": {"type": "string"},
+          "engine_marker": {"type": "string"}
+        }
+      }
+    },
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bump_size", "bump_mode", "method_priority", "seed", "common_random_numbers", "paths", "steps", "monitoring_frequency"],
+      "properties": {
+        "bump_size": {"type": "number", "const": 0.01},
+        "bump_mode": {"const": "relative"},
+        "method_priority": {
+          "type": "array",
+          "items": {"enum": ["AAD", "PATHWISE", "LRM", "FD"]}
+        },
+        "seed": {"type": "integer"},
+        "common_random_numbers": {"type": "boolean"},
+        "paths": {"type": "integer", "minimum": 1},
+        "steps": {"type": "integer", "minimum": 1},
+        "monitoring_frequency": {"enum": ["terminal", "daily", "business_daily", "fixing_dates"]}
+      }
+    },
+    "market_data": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}
