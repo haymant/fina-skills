@@ -37,6 +37,54 @@ Read the relevant reference before changing a feature:
 9. Use React Hook Form for form state and AJV for JSON Schema validation when implementing the renderer runtime.
 10. Preserve provenance for pricing and risk operations: request ID, process ID, schema version, scenario scope, engine marker, and evidence status.
 
+## Development environment (before `pnpm dev`)
+
+MCP-server submodules live under `modules/` and are invoked over stdio from
+server actions. Prepare the machine once, then start the app:
+
+1. Check out submodules and app dependencies:
+   ```bash
+   git submodule update --init --recursive
+   npm install
+   ```
+2. Copy `.env.example` to `.env` and fill in `TAC_LAKE_DIR` (lake root, e.g.
+   `/home/data/lake`), `APCA_API_KEY_ID`/`APCA_API_SECRET_KEY`, `FRED_API_KEY`,
+   and `TRADEAC_ENGINE_BIN`.
+3. Build the fina-risk native module (needed by quote/risk pricing):
+   ```bash
+   cd modules/fina-risk
+   uv venv .venv --python 3.12
+   uv sync --all-groups --frozen --python 3.12
+   cmake -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Release \
+     -DPYBIND11_FINDPYTHON=ON -DPython_EXECUTABLE=$PWD/.venv/bin/python
+   cmake --build cpp/build -j2
+   cp cpp/build/fina_risk_cpp.cpython-312-*.so .venv/lib/python3.12/site-packages/
+   ```
+   FinAP launches `uv run --project modules/fina-risk fina-risk-mcp`;
+   `PYTHONPATH` defaults to `modules/fina-risk/src:modules/fina-risk/cpp/build`.
+4. tac-engine: use the **GitHub release binary**, not a source build. Set
+   `TRADEAC_ENGINE_BIN` to the installed binary (pulled from the
+   `tac-engine-v0.1.0` release tarball, `/usr/local/bin/tac-engine` in the
+   Coolify image). Only `cargo build --release` in `modules/tac-engine` when
+   you are developing the engine itself — a full Rust compile is otherwise an
+   avoidable cost and is never required for FinAP work.
+5. fina-olap and fina-table are consumed as **published binaries**, not built
+   here:
+   - fina-olap (PyPI, `pip install fina-olap`) ships the `fina-olap-mcp` stdio
+     server; deployment sets `FINA_OLAP_MCP_BIN=/usr/local/bin/fina-olap-mcp`.
+     Local development falls back to `uv run --project modules/fina-olap
+     fina-olap-mcp` (the checked-out repo is the same code that gets
+     published). To change OLAP behaviour, work in the fina-olap repo, bump
+     the version, then push a version tag and publish a GitHub Release — the
+     release workflow publishes the PyPI wheel **and** the fina-table npm
+     package.
+   - fina-table (npm, `fina-table` in `package.json`) is the general-purpose
+     SSRM grid shared across products; do not vendor it into FinAP source.
+6. Start the app: `pnpm dev`.
+
+MCP clients are per-process singletons: after editing env, submodule code, or
+the native build, restart `pnpm dev` so servers relaunch with the new state.
+
 ## Required development loop
 
 1. Read the applicable business requirement and FinA boundary reference.
