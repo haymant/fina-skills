@@ -55,6 +55,7 @@ server actions. Prepare the machine once, then start the app:
    cd modules/fina-risk
    uv venv .venv --python 3.12
    uv sync --all-groups --frozen --python 3.12
+   uv pip install --python .venv/bin/python "pybind11==3.1.0"
    cmake -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Release \
      -DPYBIND11_FINDPYTHON=ON -DPython_EXECUTABLE=$PWD/.venv/bin/python
    cmake --build cpp/build -j2
