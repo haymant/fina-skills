@@ -24,20 +24,23 @@ cd modules/fina-risk
 ctest --test-dir build -R block/coupon_strip --output-on-failure
 ```
 
-> **Corrections on this page.** Six, all left visible rather than silently deleted,
+> **Corrections on this page.** Eight, all left visible rather than silently deleted,
 > because in each case the book told a reader not to worry about something that does
-> need attention. The last three came out of a line-by-line read of the term sheet
+> need attention. Corrections 4-6 came out of a line-by-line read of the term sheet
 > against the platform's own playbook, and two of them are the reason the first
-> correction mattered.
+> correction mattered. Corrections 7 and 8 record the fixture's coupon
+> implementation as it now stands.
 >
 > | # | what an earlier version said | what is true |
 > |---|---|---|
 > | 1 | the `× 10` quote scale is a percent conversion | it is a **ten-point price quotation** convention (`pricing.py:384-387`). The real defect is that only the coupon leg gets it. |
 > | 2 | `accruRate[0] = 0.0` is a fully-paid period | it is a synthetic pre-callable stub; the Fixed coupon is **not** lost |
 > | 3 | this block is `implemented_and_evidenced` | it is **`unsupported`** — the carry is absent from the contract, not ambiguous in it. See section 2. |
-> | 4 | the accrual fraction is `(N2−N1)/N2` and that is a small modelling choice | it is **not an accrual factor under any reading**, and the documented factor is `N1/N2`. Both legacy lanes are wrong, the past books at **zero** and the future at **certainty**. **Blocked on data.** See below. |
+> | 4 | the accrual fraction is `(N2−N1)/N2` and that is a small modelling choice | it is **not an accrual factor under any reading**, and the documented factor is `N1/N2`. Both legacy lanes are wrong, the past books at **zero** and the future at **certainty**. **Resolved in correction 8** for this fixture. See below. |
 > | 5 | `fixCoupon` might be the term sheet's Fixed/Variable flag | it is an **additive** coupon — `PayRate = AccruRate × (N1/N2) + FixCoupon` — in eleven playbook files. All zeros is correct. The consequence is worse: the Fixed/Variable *distinction* is not expressible in the platform model at all. |
 > | 6 | the snapshot was "17 days after the last fixing" | the fixture holds **two** as-of dates. The deal block is a 2026-08-21/23 snapshot; the pricing date is 2026-09-07; a **15-day** gap. Not a lifecycle subtlety — a fixture-integrity defect. |
+> | 7 | the C++ `price_fixture` coupon pays the whole future schedule on every path | it **now applies the callable gate**: per-path `call_step` plus the `span`/`elapsed` clip on its own NYSE fixing grid, the C++ port of `pricing.py:364-366`. The C++ coupon went from 0.509721 to **0.381160**; the Python lane reads 0.380634. See the "both lanes" note in section 7. |
+> | 8 | the in-flight (fixed, unpaid) period is pro-rated by `(N2−N1)/N2` | an owed period is counted **in full**. The 1-Sep fixing period (end 2026-09-01, payment 03-Sep, `N1=14 / N2=21`) is unpaid at the 07-Sep evaluation and pays the whole 0.9642%: `N1` is a status marker, not an amount share. **Legacy convention, confirmed** — this resolves the "blocked on data" in correction 4 and the in-flight half of correction 6. See section 7. |
 >
 > Correction 3 is the serious one. It is not a detail that was slightly off; it was
 > the strongest claim the book is capable of making, and it was not earned.
@@ -606,6 +609,10 @@ distinct values:
 | 4 | 14 | 21 | 1/3 | 0.003214 |
 | 5-9 | 0 | 19-22 | 1 | 0.009642 |
 
+Under correction 8 none of these shares is an *amount* any more: period 4 is
+owed and counts in full (0.009642), so the "1/3" row describes only what the
+old code used to pay — the derivation hypothesis is dead twice over.
+
 Brute-forcing every ordered ratio of every value in `N1`, `N2` and `fixingsDone`
 reproduces nothing within 5e-6 of `0.00713`. So the derivation hypothesis is dead.
 
@@ -837,6 +844,7 @@ the old line was not wrong in a way that arithmetic comparison would notice.
 |---|---|---|
 | `engine.cpp` (canonical, production) | enabled, but at a **100% barrier** | a call that never fires |
 | `pricing.py` (legacy) | computed, then discarded | **always paid to maturity** |
+| `fina_risk_cpp.cpp` `price_fixture` (fixture dispatch lane) | computed for the **put** gate only | **always paid to maturity** (the coupon loop never read the call) |
 
 The first row is not the graph switching the call off. It is the same
 boolean-as-a-level bug as in `fina-core/payoff.py`, reaching the canonical lane
@@ -848,6 +856,10 @@ and with a plausible-looking node config saying `"enabled": true`.
 
 Both are now fixed, and the same property is asserted in both: the barrier is
 1.10 whether or not the call is enabled, and the flag lives only in `enabled`.
+
+`price_fixture` is a third implementation and is fixed the same way: it now
+ports the identical `span`/`elapsed` clip onto its own NYSE step grid
+(correction 7) instead of leaving the coupon loop blind to the call.
 
 Neither prices a daily-callable memory note. And because they are separate
 implementations, no test comparing them can catch either — a difference is
@@ -886,8 +898,14 @@ a special case.
 | | coupon leg |
 |---|---|
 | before (mask of ones) | 0.509887 |
-| after (contract pro-rata) | **0.316356** |
-| | **-38.0%** |
+| after (contract pro-rata) | 0.316356 |
+| after + in-flight 1-Sep counted in full (correction 8), Python | **0.380634** |
+| after + in-flight full, C++ `price_fixture` (callable gate ported) | **0.381160** |
+| | old untruncated → both lanes: **-25%** |
+
+The two lanes converge on the same convention: the callable gate (below) plus a
+whole coupon for the fixed-but-unpaid 1-Sep period. The 0.316356 row was the
+pro-rata fix alone, still discounting that in-flight month at one third.
 
 The reason is not subtle, and it is the reason this is a defect rather than a
 tuning question:
@@ -918,9 +936,11 @@ figure that is only ever checked against itself is not a check.
 
 `test_coupon_leg_uses_unpaid_counts_and_payment_lag` had `0.48 < coupon < 0.54` —
 a band, and a band centred on 0.509887, the *untruncated* value. It was recorded
-from the output of the code that contained the bug. It is now `0.30 < coupon <
-0.34`, and a second test asserts the *shape* of the truncation rather than the
-total, so that reverting the fix fails whatever the PV happens to be.
+from the output of the code that contained the bug. It moved to `0.30 < coupon <
+0.34` (pro-rata alone) and is now `0.36 < coupon < 0.41` (pro-rata plus the
+in-flight month counted in full). The second test asserts the *shape* of the
+truncation rather than the total, so that reverting the fix fails whatever the
+PV happens to be.
 
 ### The quote scale is not a fixture problem. It reaches a real deal.
 
