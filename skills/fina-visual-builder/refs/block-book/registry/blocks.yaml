@@ -1,0 +1,865 @@
+# Block-type registry
+#
+# This file is the single source of truth for what a payoff-graph *block* is.
+# The block book, the generated diagrams, and the block tests all derive from
+# it. Nothing in this file may be hand-written twice.
+#
+# Status: v0, seed. The permanent home of this file is an open decision -- either
+# here, next to the book that explains it, or in fina-skills/schema/ beside
+# payoff-graph.schema.json. It is here for now so that nothing has to move
+# before the first block is finished.
+#
+# Why a registry at all
+# ---------------------
+# The 13-block catalogue in SKILL.md is a design target, not a description of
+# the code. As of this writing the 13 block kinds resolve to 9 distinct kernels:
+#   9 block kinds  have a clean standalone pure kernel
+#                  (cash_settlement and physical_delivery_settlement share one,
+#                   so 9 kinds sit on 8 functions)
+#   2 block kinds  map to a kernel that does only part of the work
+#                   (local_ko_gate, global_ko_gate -> resolve_ko)
+#   2 block kinds  have no kernel at all
+#                   (worst_of_performance, payment_discount)
+# `kernel_mapped: false` below records the absent ones honestly, so a test is
+# never generated against a binding that does not exist.
+#
+# Field meanings
+# --------------
+#   concept            one paragraph, no jargon, for a reader who does not work
+#                      in derivatives
+#   specification      the sentence a term sheet would contain. Test
+#                      expectations are derived from THIS, never from running
+#                      the kernel and recording its output.
+#   in_ports           what the block is given, typed
+#   out_ports          what the block returns, typed
+#   state_read/write   the block's memory across calls
+#   kernel             the function that computes it. `line` is 1-indexed into
+#                      `header`.
+#   call_site          where the engine invokes it, and what it does with the
+#                      result. A block is not its arithmetic alone; the call
+#                      site is where most real-world errors live.
+#   evidence           THREE INDEPENDENT axes, because they fail independently:
+#       spec_conformance  does the kernel implement the specification?
+#       deal_evidence     can this block's inputs be traced to a real deal?
+#       lifecycle_state   was the engine handed a COMPLETE state, or a
+#                         reconstructed one?
+#     A block can be perfectly tested against its spec (spec_conformance:
+#     evidenced) while the deal that feeds it is not understood
+#     (deal_evidence: partial), and while the state it was given has a hole in
+#     it (lifecycle_state: unresolved). Confusing the axes is how a wrong number
+#     becomes a well-tested one.
+#
+#     lifecycle_state is NEW and not yet ratified. It exists because
+#     coupon_strip hit a case the other two cannot express: correct arithmetic,
+#     traceable inputs, and a memory chain that is empty because the source
+#     snapshot was taken 17 days after the last fixing. Nothing is wrong with
+#     the formula; the input is incomplete, and neither "does it match the spec"
+#     nor "can I trace the inputs" can say so. Until it is accepted, record it
+#     and ignore it in tooling.
+#   status             built | not_started
+#
+# Evidence vocabulary is borrowed from fina_risk::EvidenceStatus
+# (cpp/include/fina_risk/types.hpp:38-46) so there is exactly one vocabulary:
+#   implemented_and_evidenced | partial | unsupported | ambiguous_in_source
+#   | unresolved
+# `partial` is an addition to that enum, used where some inputs are traced to a
+# term sheet and others are not. coupon_strip is the first: its rate is traced
+# exactly, its quote scale is not.
+#
+# The three axes map onto the platform's own feature-coverage taxonomy, so a
+# reader who knows Murex already knows this book.  From
+# refs/MurexPlaybook/Products/Range_Accruals/payoff/raki-plus-native-engine-methodology.md:
+#
+#   this book            MurexPlaybook
+#   ------------------   --------------------------------------------
+#   spec_conformance     implemented_and_evidenced /
+#                        implemented_but_not_evidenced /
+#                        represented_but_not_implemented / unsupported
+#   deal_evidence        the _and_evidenced half of the pair above
+#   lifecycle_state      (no MurexPlaybook equivalent -- see the note below)
+#
+# `ambiguous_in_source` means the same thing in both: the source documents a
+# behaviour but does not resolve which reading of it is right.
+#
+# Source authority, used to settle disagreements in this file
+# --------------------------------------------------------
+#   1. the term sheet            the executed contract
+#   2. refs/MurexPlaybook/       the platform's own product documentation
+#   3. legacy code and payloads  the thing being replaced
+#
+# The MurexPlaybook declares its own ambiguities explicitly (for example
+# raki-plus.md:224, "the phrase 'at least once for all underlyings' does not say
+# whether hits must be simultaneous").  Those are NOT gaps to be filled with a
+# convenient default: the playbook's own rule at
+# raki-plus-native-engine-methodology.md:38 is "never fill the gap with a
+# convenient default merely because it is easy to code", and its
+# raki-plus.md:213 supplies the resolution -- "Never overwrite a prior
+# memory-hit or KI state with a later non-hit unless product semantics
+# explicitly provide for reset, which the source does not."  A term sheet
+# outranks the playbook, and a code comment outranks neither.
+
+schema_version: fina/block-registry/v0
+
+blocks:
+  - kind: coupon_strip
+    title: Coupon for one accrual period
+    status: built
+    kernel_mapped: true
+    concept: >-
+      A range-accrual note pays a coupon each period for the days on which the
+      basket's worst performer stayed inside a price range. This block turns
+      "how many days qualified" into "what rate applies for this period". It does
+      not decide which days qualified; that is the range_accrual block. The band
+      can be one-sided: the example deal sets a 10% floor and writes "N/A" for the
+      upper bound, which reaches the code as the sentinel upRange = 999.99 passed
+      through literally rather than as an infinity.
+    specification: >-
+      NOT A VERBATIM TERM-SHEET RULE, AND NOW KNOWN NOT TO BE ONE. The term
+      sheet's variable-coupon rule is `Nominal x Day-in Cash Dividend Rate x
+      Days-in / Total Days`, with both counts scoped to "the relevant Calculation
+      Period". The implementation adds a cross-period unpaid-day carry. That
+      carry was previously recorded as `ambiguous_in_source` -- "the source does
+      not say which reading is right". It is no longer ambiguous. Three
+      independent sources agree it is absent: see `carry_verdict` below. See
+      blocks/coupon-strip.md section 2.
+    carry_verdict: >-
+      RESOLVED AGAINST THE CARRY, 2026-09-28. (1) TERM SHEET: 13 pages, and
+      nothing carries an unpaid shortfall forward. The one phrase that looks like
+      it might -- "the Call Settlement Amount also includes any accrued but
+      unpaid Potential Cash Dividend Amount calculated up to (and including) the
+      Call Fixing Date" (line 282) -- is bounded by "up to (and including) the
+      Call Fixing Date", so it is the intra-period `Days Elapsed` pro-ration
+      that the Fixed and Variable formulas already implement, not a
+      cross-period balance. The same wording recurs at line 302 for the final
+      period. (2) MUREXPLAYBOOK: "Memory Coupon" IS a real platform feature, but
+      it is a DIFFERENT mechanism with its own Coupon Barrier, documented in
+      Introduction/Common_Features.md:25,128,
+      Products/Range_Accruals/RAKI_Enhancement.md:16-28 and
+      Products/Range_Accruals/payoff/raki-enhancement.md:15-17 -- and it is
+      MUTUALLY EXCLUSIVE WITH GLOBAL KO
+      (RAKI_Enhancement.md:20, Common_Features.md:25, raki-enhancement.md:15).
+      This deal has Global KO enabled (`KIKOSelect.globalKO = true`), so the
+      platform's own validation forbids the two co-existing. (3) PAYLOAD:
+      there is no coupon-barrier field, no memory flag and no accrual-state
+      field in RGACCLKO or KIKOSelect at all.
+      The only surviving source is
+      Products/Range_Accruals/payoff/raki-plus-native-engine-methodology.md:30,52,88
+      ("unpaid memory balance", `double unpaid_coupon`), which violates its own
+      rule at line 38 of the same file.
+      CONSEQUENCE: the carry is a real product that this deal is excluded from,
+      not an unreadable document. `spec_conformance` moves from
+      `ambiguous_in_source` to `unsupported`.
+    specification_termsheet: >-
+      Potential Cash Dividend Amount = Nominal Amount x Days-in Cash Dividend Rate
+      x (Days-in / Total Days)
+    specification_termsheet_rounding: >-
+      "The Potential Cash Dividend Amount will be rounded to the nearest 0.01,
+      with 0.005 or above being rounded upwards" (line 238, repeated at 254).
+      The platform's exact implementation of that sentence is
+      `CashFlow[i] = Round(Denomination x PayRate[i], 2) x (Notional /
+      Denomination)` -- MurexPlaybook/Introduction/Flex_Development.md:161,
+      Products/Range_Accruals/RakiPlus_MemRakiPlus.md:100, and
+      Products/Range_Accruals/payoff/raki-plus.md:64. Rounding happens PER
+      DENOMINATION and is then scaled, which is not the same as rounding the
+      total: 10000 x 0.009642 = 96.42 exactly, but a period whose raw figure is
+      96.425 gives 96.43 x 5 = 482.15, where rounding the total 2410.625 gives
+      2410.63. `KIKOSelect.denomination` is 10000 in this payload, which is the
+      term sheet's Nominal Amount per ELI, and `notional` is 50000, so the
+      scaling factor is exactly 5. NEITHER LANE ROUNDS AT ALL.
+    arithmetic: |
+      total  = max(total_fixings, 1)
+      unpaid = max(qualifying_fixings - already_paid_fixings, 0)
+      rate   = fixed_coupon + range_rate * min((unpaid + carried_memory) / total, 1)
+    arithmetic_provenance:
+      traced_to_termsheet: [range_rate, qualifying_fixings, total_fixings]
+      period_1_only: [fixed_coupon]
+      defensive_guards: [max_total_one, max_unpaid_zero, min_share_one]
+      NOT_in_the_termsheet: [already_paid_fixings, carried_memory]
+      fixed_coupon_is_NOT_the_fixed_variable_flag: >-
+        CORRECTION. An earlier note suggested `RGACCLKO.fixCoupon` might be the
+        term sheet's Fixed-versus-Variable flag. It is not. Across eleven
+        MurexPlaybook files the field is an ADDITIVE coupon:
+        `PayRate[i] = AccruRate[i] * (N1/N2) + FixCoupon[i]`
+        (RakiPlus_MemRakiPlus.md:30, Memory_Range_Accrual_MemRaki.md:23,
+        Range_Accrual_Raki.md:32, Product_Development_Guide.md:112, and six
+        payoff chapters). All zeros therefore correctly means "no fixed coupon
+        adder", and this deal has none. The consequence is worse than the
+        original guess: the term sheet's Fixed/Variable DISTINCTION is not
+        expressible in the Murex model at all, because `AccruRate * (N1/N2)` is
+        the same formula for every period. That is a gap in the LEGACY system,
+        not only in this repository's lanes. See `fixed_variable_gap` below.
+    fixed_variable_gap: >-
+      The term sheet splits the nine periods in two. CP1 is FIXED: the full
+      `Nominal x 0.9642%` if the worst performer is at or above its 10% Barrier
+      on the single period end date, and otherwise a time-proration on a call --
+      `Nominal x Fixed Rate x (Days Elapsed / Total Days)` (line 233). CP2-CP9
+      are VARIABLE: `Nominal x Days-in Rate x (Days In / Total Days)`
+      (line 247). Both rates are 0.9642%, so the difference is purely HOW the
+      fraction is measured: an all-or-nothing end-date test versus a daily
+      count. The Murex formula has no representation for the first. Neither lane
+      implements it; `engine.cpp` reaches the right answer for CP1 only by
+      accident, documented in blocks/coupon-strip.md section 7 as "correct by
+      luck".
+    in_ports:
+      - {name: terms.fixed_coupon, type: double, unit: rate-per-period}
+      - {name: terms.range_rate, type: double, unit: rate-per-period}
+      - {name: terms.already_paid_fixings, type: int, unit: fixings}
+      - {name: terms.total_fixings, type: int, unit: fixings}
+      - {name: qualifying_fixings, type: double, unit: fixings}
+      - {name: carried_memory, type: double, unit: fixings}
+    out_ports:
+      - {name: rate, type: double, unit: rate-per-period, note: not a currency amount}
+    state_read: []
+    state_write: []
+    kernel:
+      module: fina::risk::fcn
+      symbol: period_rate
+      header: cpp/include/fina_risk/coupon.hpp
+      line: 15
+    call_site:
+      file: cpp/src/fina_risk/engine.cpp
+      line: 291
+      note: >-
+        Invoked as `rate += period_rate(period, qualifying, carried) -
+        period.fixed_coupon`, which is algebraically a conditional: if the
+        period's coupon barrier failed, the rate stays at fixed_coupon and the
+        block is never called. The caller supplies `qualifying` by counting
+        in_range (engine.cpp:305) and `carried` from state.unpaid_coupon when
+        coupon_memory is on (engine.cpp:308).
+      known_defect: >-
+        The gate does not distinguish a called note from an uncalled one, but the
+        term sheet does: on a call the barrier test is skipped "regardless of
+        whether the Closing Price ... is at or above its Barrier Price on the Call
+        Fixing Date", and a pro-rated fixed amount is paid instead. Populating
+        coupon_barrier would therefore break the call branch. It is currently
+        unreachable because nothing ever sets coupon_barrier.
+    termsheet_fields:
+      - RGACCLKO.accruRate      # the rate. 0.009642 = 0.9642% / 100, exact
+      - RGACCLKO.N1             # fixings already paid
+      - RGACCLKO.N2             # fixings in the period
+      - RGACCLKO.lowRange       # lower bound, 0.1 = 10% of initial spot
+      - RGACCLKO.upRange        # upper bound, 999.99 sentinel on this deal
+      - RGACCLKO.fixCoupon      # all zeros; payoff.py:171 hard-codes 0.0 and never reads this
+      - RGACCLKO.endDate        # the observation date for the period-1 barrier
+      - RGACCLKO.paymentDate    # second business day after endDate
+    termsheet_fields_not_used:
+      - RGACCLKO.fixCoupon      # dead: the legacy engine routes the period-1 fixed
+                                # coupon through the accrual grid instead
+      - legacyCouponQuoteScale  # absent from the source, so a 10.0 default applies
+    divergent_implementations:
+      # Neither legacy lane calls period_rate. Both inline a different
+      # expression, and the difference is not cosmetic.
+      - lane: pricing.py
+        site: "pricing.py:333,342,346-348"
+        expression: "accrual_fraction = max(N2 - N1, 0) / max(N2, 1)"
+        verdict: >-
+          NOT AN ACCRUAL FACTOR UNDER ANY READING. The documented accrual factor
+          is `N1/N2` (MurexPlaybook, twelve files). This expression is its exact
+          complement when N1 means days-in-range, and it is days-REMAINING when
+          N1 means days-elapsed -- which is what the payload actually holds (see
+          `range_accrual`). There is no reading of N1 under which
+          `(N2 - N1)/N2` is a fraction of qualifying days.
+      - lane: fina_risk_cpp.cpp
+        site: "fina_risk_cpp.cpp:593-598"
+        expression: "coupon += scale * rate * max(N2 - N1, 0) / max(N2, 1) * df"
+        verdict: same defect, same expression, independently written
+      - lane: engine.cpp
+        site: "engine.cpp:305,310"
+        expression: "period_rate(period, qualifying, carried)"
+        verdict: >-
+          CORRECT, and the only lane that calls this kernel. `qualifying` is a
+          pathwise count of in-range observations, so the kernel's
+          `qualifying - already_paid` is the right shape. It is the legacy lanes
+          that are wrong, not the kernel.
+    dead_code:
+      - site: "pricing.py:348"
+        line: "amount *= np.minimum(unpaid_fraction / np.maximum(accrual_fraction, 1e-12), 1.0)"
+        verdict: >-
+          NO-OP, verified numerically rather than by inspection.
+          `accrual_fraction` (:342) and `unpaid_fraction` (:346) are the same
+          expression, so the quotient is exactly 1.0 for every period that
+          survives the `unpaid <= 0` guard -- and the `max(..., 1e-12)` branch is
+          unreachable for the same reason. This is the SECOND instance of the
+          same pattern that stage 1 removed at `pricing.py:358-363`, where
+          `np.where(call_date <= end_step, amount, amount)` had two identical
+          branches. The signature is "a line that was disabled rather than
+          deleted", and it now appears twice in one function.
+    not_in_scope:
+      - which days qualified (block: range_accrual / in_range)
+      - carrying the unpaid count forward (block: memory_carry / next_memory)
+      - the coupon barrier, knock-out, and memory on/off switch (the call site)
+      - discounting to present value (block: payment_discount)
+      - unit conversion via coupon_quote_scale (engine.cpp:357)
+      - carrying the unpaid count forward (block: memory_carry / next_memory)
+      - the coupon barrier, knock-out, and memory on/off switch (the call site)
+      - discounting to present value (block: payment_discount)
+      - unit conversion via coupon_quote_scale (engine.cpp:357)
+      - rounding the amount to 0.01, which the term sheet requires and the
+        kernel does not do anywhere
+      - the callable condition, which the term sheet defines as a sticky
+        per-asset latch (a Memory Event) and the graph disables via
+        features.ko_enabled=false
+    evidence:
+      spec_conformance: unsupported
+      deal_evidence: partial
+      lifecycle_state: unresolved
+      was: >-
+        spec_conformance was `ambiguous_in_source`, recorded when the carry's
+        absence from the term sheet looked like an unresolved ambiguity in the
+        document. It is not ambiguous -- see `carry_verdict`. The downgrade to
+        `unsupported` is the finding: the kernel correctly implements a mechanism
+        this deal's contract does not promise, and the platform forbids it for
+        this product configuration.
+      detail: >-
+        Ten cases, derived by hand from the specification, pass. The rate is
+        fully traced: RGACCLKO.accruRate = 0.009642 = 0.9642% / 100 exactly, and
+        0.9642% is the only rate the term sheet states, under two names. Periods
+        2-9 of the engine's accrual grid match the term sheet's period table
+        exactly on end date, payment date and day count (8 of 8); period 1 is
+        split 20 + 1 days at 2026-06-01, which is the first Callable Date and the
+        period-1 barrier observation date, and the two halves still sum to the
+        stated 21 days. deal_evidence is partial, not resolved, for two reasons.
+        First, the compiled graph's competing coupon.rate = 0.00713 is not a
+        negotiated rate: it appears nowhere in the 162 KB source, the source has
+        no coupon_rate field or economics block, no number in the source lies
+        between 0.006 and 0.009, and the value falls inside the [0.006, 0.018]
+        band this repository's own synthetic deal generator draws coupons from,
+        where it is reproducible as a seeded sample. The C++ engine never reads
+        coupon.rate at all. Second, and reachable from a real deal,
+        coupon_quote_scale = 10.0 is the payoff.py:455 fallback because
+        legacyCouponQuoteScale is absent from the source; it is not a percent
+        conversion, because the value it multiplies is already a decimal
+        fraction, and three code paths disagree on the default (engine.cpp:125
+        and :205 say 1.0, fina_risk_cpp.cpp:591 says 10.0, fcn_reference.py:118 says
+        1.0). lifecycle_state is a proposed third axis, and it is now much
+        worse than "a memory chain that is empty". See
+        `as_of_date_mismatch` below and blocks/coupon-strip.md.
+      as_of_date_mismatch:
+        severity: >-
+          FIXTURE-INTEGRITY DEFECT. Both lanes discount from
+          `marketData.evaluationDate`, but the deal block they read is a
+          different snapshot.
+        deal_state_as_of: >-
+          2026-08-23 -- four independent timestamps agree:
+          `extractedSystemDate` = '2026-08-23', `docCreatedOn` and `docUpdatedOn`
+          = 1787523429715 (2026-08-23), `updatedDatetime` = 1787347558169
+          (2026-08-21), `lastFixingDate` = 46255 (2026-08-21).
+        pricing_date: >-
+          2026-09-07 -- `marketData.evaluationDate` = 46272 and `coreVersion` =
+          1788746769 (2026-09-07). `createdDatetime` = 1777250499142 (2026-04-27)
+          is the booking date.
+        gap_days: 15
+        consequences:
+          - >-
+            `KIKOSelect.GKOLocked = [true, false]` and `GKODate = [46174, 0]`
+            are 15 days old. If AMZN crossed 286.00 on any session in the gap
+            the note was terminated, and the payload would still report
+            `status: LIVE`. Nothing in the file can rule that out -- which means
+            the two independent confirmations of that flag
+            (`GKOLocked = [true, false]` and the market snapshot showing ADBE
+            above 263.967 while AMZN is below 286.00) are consistent, but the
+            LATCH ITSELF CANNOT BE VERIFIED.
+          - >-
+            CP4 ended 2026-09-01, six days BEFORE the 2026-09-07 evaluation
+            date, yet `RGACCLKO.N1[4] = 14` of `N2[4] = 21` -- frozen at the
+            2026-08-21 snapshot.
+          - >-
+            CP5 is four sessions underway as of 2026-09-07, yet
+            `RGACCLKO.N1[5] = 0`.
+          - >-
+            Every figure in this repository that mixes the two as-of dates is
+            provisional, INCLUDING the 0.316356 coupon-leg figure produced by
+            the stage 1 call-truncation fix.
+        whose_call: >-
+          whoever owns the extraction, not this repository. It cannot be fixed in
+          code and must not be papered over by choosing a snapshot.
+    test:
+      runner: ctest
+      name: block/coupon_strip
+      file: cpp/tests/coupon_strip_test.cpp
+      cases: 10
+    book_page: blocks/coupon-strip.md
+
+  # --- The rest of the catalogue, honestly recorded -------------------------
+  # kernel_mapped: false means there is no standalone function to test, so a
+  # block test cannot be generated until the kernel is extracted. These are
+  # recorded here rather than left out so the gap is visible and countable.
+
+  - kind: range_accrual
+    title: Was this observation inside the range?
+    status: blocked_on_data
+    kernel_mapped: true
+    kernel: {module: fina::risk::fcn, symbol: in_range, header: cpp/include/fina_risk/coupon.hpp, line: 9}
+    book_page: null
+    evidence:
+      spec_conformance: implemented_and_evidenced
+      deal_evidence: unresolved
+      lifecycle_state: unresolved
+    note: >-
+      Counts nothing itself. The engine increments qualifying by 1.0 per
+      qualifying observation (engine.cpp:305), so this block is a predicate and
+      the counting is the caller's job.
+    the_range_is_well_defined: >-
+      The bound is `RGACCLKO.lowRange = 0.1` against
+      `upRange = 999.99` -- a ONE-SIDED band, and the sentinel is a literal, not
+      an infinity (`payoff.py:172` passes it through). Worth stating plainly
+      because it reads backwards: a "10% Barrier" is a NINETY-PERCENT FALL from
+      each asset's own initial spot, not a near-money barrier. For ADBE that is
+      23.997 and for AMZN 26.00, against quotes of 267.885 and 258.355.
+      The term sheet tests inclusively on both sides ("at or above" the Floor,
+      line 264), and every lane already does -- so inclusivity is now
+      SPEC-BACKED rather than accidental. Recorded by
+      MurexPlaybook/Products/Range_Accruals/payoff/raki-plus.md:62 as undefined
+      in the platform source; the term sheet resolves it.
+    blocked_reason: >-
+      THE PAYLOAD CANNOT SUPPLY THIS BLOCK'S OUTPUT. The documented accrual factor
+      is `N1/N2` with N1 the count of days in range
+      (MurexPlaybook, twelve files: `AccruFactor = N1/N2`, N1 = "the number of
+      days the accrual condition is met", N2 = "the total number of days in the
+      observation period"). This payload contains NO in-range day count at all:
+
+        idx  period  end          N1  N2  fixingsDone
+          1   CP1     2026-06-01    1   1   1
+          2   CP2     2026-07-01   21  21  21
+          3   CP3     2026-08-03   22  22  22
+          4   CP4     2026-09-01   14  21  14
+          5   CP5     2026-10-01    0  21   0
+          ...
+          9   CP9     2027-02-01    0  19   0
+
+      `N1` is IDENTICAL to `fixingsDone` in every row, so it is days ELAPSED,
+      not days in range. `currN1` and `currN2` are scalars and both 0.
+      `RGACCDate` is `{obvDate: [], accrual: [], fixingDone: []}` -- all empty,
+      which is itself a spec gap: the platform expects an explicit daily fixing
+      date list here (RakiPlus_MemRakiPlus.md:77, "designates the range accrual
+      fixing dates used to calculate N1 and N2"), and `pricing.py:309-311`
+      substitutes an `np.linspace` of raw serials that includes weekends. The
+      correct source for those dates is the NYSE calendar now extracted at
+      `cpp/include/fina_risk/nyse_calendar.hpp`.
+    what_the_lanes_do_instead:
+      - lane: pricing.py
+        expression: "max(N2 - N1, 0) / max(N2, 1)"
+      - lane: fina_risk_cpp.cpp
+        expression: "max(N2 - N1, 0) / max(N2, 1)"
+      - consequence: >-
+          The past pays NOTHING and the future pays CERTAINTY. CP1, CP2 and CP3
+          are booked at zero because N1 == N2. CP4 is booked at 7/21 = 0.3333.
+          CP5-CP9 are booked at 1.0 each -- the 10% floor is never tested on any
+          simulated path. The range-accrual feature is absent from the whole
+          forward-looking part of the note. Undiscounted cash on a 50,000
+          notional at 0.009642: as shipped 2,571.20; under the documented
+          N1/N2 reading 1,767.70; a difference of 803.50, +45.5%.
+          At PV level on 30,000 paths, seed 1729: coupon leg 0.316356 ->
+          0.353528 (+11.8%), total PV 1.279426 -> 1.316598 (+2.9%).
+    do_not_patch_this_blindly: >-
+      Switching `(N2-N1)/N2` to `N1/N2` would be equally unfounded, because N1
+      does not mean what the playbook says it means. Neither lane can compute
+      the correct answer from this payload: for the three ELAPSED periods the
+      right answer is a HISTORICAL FACT -- the Potential Cash Dividend Amount
+      actually paid on 2026-06-03, 2026-07-03 and 2026-08-05, 482.10 each, which
+      is 2.9% of notional and currently valued at zero. The record does not hold
+      it. So this is a DATA gap, not a code bug, and the open question is what
+      the legacy system populates, not which expression to type.
+
+  - kind: memory_carry
+    title: Unpaid fixings carried into the next period
+    status: not_started
+    kernel_mapped: true
+    kernel: {module: fina::risk::fcn, symbol: next_memory, header: cpp/include/fina_risk/coupon.hpp, line: 21}
+    book_page: null
+    evidence:
+      spec_conformance: unsupported
+      deal_evidence: unsupported
+      lifecycle_state: not_applicable
+      note: >-
+        "unsupported" on BOTH axes, which is the first block in this registry to
+        earn that. It is not a block with a data problem; it is a block for a
+        product this deal is documented as EXCLUDED from.
+    note: >-
+      Returns a count of fixings, not a rate. Closely coupled to coupon_strip
+      because it is the writer of the value coupon_strip reads as carried_memory.
+    the_word_memory_means_two_things: >-
+      This is the single most important naming fact in the repository, and the
+      MurexPlaybook settles it. There are TWO distinct mechanisms, and the
+      product name refers to the one that is NOT implemented here.
+      A. THE CONTRACT'S MEMORY -- a per-asset termination latch.
+      "Memory Event ... occurs on a Call Fixing Date if the Closing Price of the
+      Reference Asset on such Call Fixing Date is at or above its Call Price"
+      (termsheet1.md:280-281). "If EACH of the Reference Asset ... has BECOME a
+      Memorised Reference Asset" (termsheet1.md:279). Each share is stamped the
+      first time it trades at or above its Call Price; the stamp is permanent;
+      when every share is stamped the note is terminated. The coupon plays no
+      part in it.
+      Corroborated independently eight times in MurexPlaybook -- "occurs AT LEAST
+      ONCE for ALL underlyings" (Memory_Range_Accrual_MemRaki.md:15-16,
+      RakiPlus_MemRakiPlus.md:45,47, RAKI_Enhancement.md:35-37,
+      Common_Features.md:26, Glossary.md:78, and three payoff chapters) -- plus
+      the per-name status columns `LKO Locked` / `GKO Locked` in KIKOSEL*, which
+      are exactly `KIKOSelect.GKOLocked` in this payload.
+      B. THE ENGINE'S MEMORY -- an unpaid-day carry. `carried_memory` in
+      `coupon.hpp:18`, `state.unpaid_coupon` at `engine.cpp:320`,
+      `coupon_memory` in `terms.hpp:102`.
+      Neither name is wrong. Together they are a trap, because a reader who sees
+      `memory_ko` and `coupon_memory` in one struct reasonably assumes one is a
+      variant of the other.
+    why_this_block_should_not_exist_for_this_deal: >-
+      (1) The term sheet never mentions a carry, in 13 pages (see
+      `coupon_strip.carry_verdict` for the near-miss phrase and why it is not
+      one). (2) A carry IS a real platform feature -- but it is a DIFFERENT
+      feature, gated on a separate Coupon Barrier, and it is MUTUALLY EXCLUSIVE
+      WITH GLOBAL KO (RAKI_Enhancement.md:20; Common_Features.md:25;
+      payoff/raki-enhancement.md:15). This deal has `KIKOSelect.globalKO = true`,
+      so the platform's own rule excludes it. (3) The payload has no
+      coupon-barrier field, no memory flag and no accrual-state field.
+      The only surviving source is
+      payoff/raki-plus-native-engine-methodology.md:30,52,88 -- "unpaid memory
+      balance", `double unpaid_coupon` -- which is not the payoff chapter it
+      claims to implement, and which breaks its own rule at line 38 of the same
+      file: "Never fill the gap with a convenient default merely because it is
+      easy to code."
+    the_fixture_propagates_the_invention: >-
+      `scripts/generate_benchmark.py:182` writes a hardcoded literal
+      `"unpaidPeriodRule": "N2-N1"` into every coupon leg. It is on 2000 of 2000
+      instruments in benchmark/instruments.json, including the 1333 that also
+      carry `features.globalMemoryCall = true` -- the exact combination the
+      platform says is impossible. It is a single constant, not a flag, so it
+      cannot even be switched off. It has ZERO consumers in any code path or
+      schema, and `N2-N1` is days OUT of range, which is not a memory balance
+      under any reading. Recommend: delete the field, and delete the parameter
+      that writes it.
+    what_it_would_take_to_keep_it: >-
+      A product decision plus a data contract, not a code fix: a named Coupon
+      Barrier field in KIKOSelect, a feature flag the graph can actually read,
+      and proof the deal is not global-KO. Absent those, the block should be
+      removed from the compiled graph rather than left live with a default.
+
+  - kind: knock_in_gate
+    title: Has the basket knocked in?
+    status: not_started
+    kernel_mapped: true
+    kernel: {module: fina::risk::fcn, symbol: update_knock_in, header: cpp/include/fina_risk/terminal_option.hpp, line: 15}
+    book_page: null
+
+  - kind: down_and_in_put
+    title: The residual put the investor is left holding
+    status: not_started
+    kernel_mapped: true
+    kernel: {module: fina::risk::fcn, symbol: terminal_option_payoff, header: cpp/include/fina_risk/terminal_option.hpp, line: 10}
+    book_page: null
+
+  - kind: notional_return
+    title: Repayment of principal
+    status: not_started
+    kernel_mapped: true
+    kernel: {module: fina::risk::fcn, symbol: funding_amount, header: cpp/include/fina_risk/funding.hpp, line: 7}
+    book_page: null
+
+  - kind: fixing_schedule
+    title: Which observations exist, and when
+    status: not_started
+    kernel_mapped: true
+    kernel: {module: fina::risk::fcn, symbol: observation_on_or_before, header: cpp/include/fina_risk/schedule.hpp, line: 8}
+    book_page: null
+
+  - kind: cash_settlement
+    title: Settle the terminal option in cash
+    status: not_started
+    kernel_mapped: true
+    kernel: {module: fina::risk::fcn, symbol: settlement_for, header: cpp/include/fina_risk/settlement.hpp, line: 12}
+    book_page: null
+    note: Shares one kernel with physical_delivery_settlement. See below.
+
+  - kind: physical_delivery_settlement
+    title: Deliver the worst-performing name
+    status: not_started
+    kernel_mapped: true
+    kernel: {module: fina::risk::fcn, symbol: settlement_for, header: cpp/include/fina_risk/settlement.hpp, line: 12}
+    book_page: null
+    note: >-
+      The SAME kernel as cash_settlement. settlement_for returns a descriptor
+      carrying both the settlement kind and a physical_delivery flag; the two
+      are not a runtime branch. A registry entry that presents them as mutually
+      exclusive blocks would generate two tests of one function.
+    quantity_formula_now_available: >-
+      The playbook admits it cannot supply this: "The document supplies no
+      mapping from the maturity residual formula to an in-the-money test and no
+      physical-delivery quantity formula" (Products/KIKO/payoff/reverse-kiko.md).
+      The TERM
+      SHEET supplies both, so this block is no longer blocked on product
+      knowledge. "The Physical Settlement Amount ... In respect of every Nominal
+      Amount of Memory US Stocks ELIs, a number of the Worst Performing Reference
+      Asset as at the Final Fixing Date calculated as follows:
+      (Nominal Amount) / (Exercise Price of the Worst Performing Reference Asset
+      as at the Final Fixing Date)" (termsheet1.md:318-322), calculated per ELI.
+      Odd lots are DELIVERED and fractional shares are NOT rounded as shares --
+      "Any odd lot(s) ... will be delivered to you as part of the Physical
+      Settlement Amount. Any fractional stocks, which will not be rounded ... will be
+      settled by payment of a cash amount" (line 328). It is the CASH AMOUNT that is
+      rounded, to 0.01 with 0.005 upwards, and "No Cash Settlement Expenses will be
+      payable for the cash payment of any Fractional Stocks" -- same line. The
+      general Cash Settlement Expenses row adds that such charges are "Currently
+      there are no such charges or expenses" at all (line 347).
+      "as at the Final Fixing Date" attaches to WHICH ASSET is worst, not to a
+      re-struck exercise price -- the Exercise Price is fixed in the Price Table
+      at 78% of initial spot, 187.1766 for ADBE and 202.8000 for AMZN.
+      Sanity check against the Murex rate form
+      `PR_KI2 * (WPS/Strike_KI2 - 1)` with `PR_KI2 = -1`, `Strike_KI2 = 0.78`:
+      value / notional = WPS / 0.78, so the change from par is WPS/0.78 - 1, and
+      PR = -1 flips the sign. They are the same economics in a rate form and a
+      quantity form. This is the last excuse for not implementing delivery.
+    leg_naming_is_non_conformant: >-
+      Separate finding, on the RESULT rather than the block. The payload reports
+      this leg as `legName: "PUT"`, `legId: 1`, `multiplier: -1`, and the engine
+      echoes "PUT". The playbook forbids exactly that label: "The terminal leg
+      must not be labelled a standalone vanilla put unless the product contract
+      proves that interpretation" (raki-plus-native-engine-methodology.md). The
+      contract does not prove it -- this is an ELI settled by physical delivery
+      of the worst performer at 78% moneyness behind a 70% knock-in, and a traced
+      run must be able to say why the note terminated. The right shape already
+      exists in this repository: `intrinsic_option` with
+      `basket: worst_of`, `knockIn`, `physical_delivery` in the benchmark
+      fixtures.
+
+  - kind: global_ko_gate
+    title: Has the whole basket knocked out?
+    status: not_started
+    kernel_mapped: false
+    declared_kernel: {module: fina::risk::fcn, symbol: resolve_ko, header: cpp/include/fina_risk/barriers.hpp, line: 17}
+    kernel: null
+    book_page: 03-where-each-block-lives.md
+    inlined_sites:
+      - {lane: engine.cpp, lines: "243-244,255-260", what: "sticky per-asset latch, cleared then set, gated on memory_ko"}
+      - {lane: engine.cpp, lines: "267-268", what: "latched-or-joint test, both paths branch on memory_ko"}
+      - {lane: engine.cpp, line: "269", what: "resolve_ko, the only call to the declared symbol"}
+      - {lane: fina_risk_cpp.cpp, function: price_fixture, lines: "464-493", what: "reads KIKOSelect.GKOLocked into a per-asset seed - the one CONFORMANT site, fixed at stage 1"}
+      - {lane: fina_risk_cpp.cpp, function: price_fixture, lines: "560-572", what: "sticky per-asset latch, seeded from the deal, AND-ed across the basket - was a joint same-fixing test; the source comment calling it conservative is wrong, and it was DELETED at stage 1"}
+      - {lane: fina_risk_cpp.cpp, function: run_cpp_parity, lines: "884-895", what: "OPEN, NON-CONFORMANT: the same joint same-fixing test, unchanged"}
+      - {lane: pricing.py, lines: "304-321", what: "sticky per-asset latch, correct"}
+      - {lane: fcn_reference.py, line: "61", what: "reads memory_ko, defers to the caller"}
+      - {lane: daily_termsheet.py, line: "267", what: "np.all joint, used at :307, the only lane that shortens coupons"}
+    note: >-
+      MISLEADING BINDING, NOW DEMOTED from partial to false. resolve_ko is a clean
+      correct six-line tie-break between two booleans; it answers "which of two
+      fired", not "did a barrier fire". Five lanes inline the block itself and no
+      two agreed before stage 1. One (fina_risk_cpp.cpp) is now split: one site
+      conformant, two still not, in the same translation unit. See
+      `same_fixing_verdict`.
+    same_fixing_verdict:
+      was: >-
+        Recorded as "the one deliberate, documented departure in the whole
+        repository -- a real, defensible, disclosed reserving decision that
+        should be preserved and labelled, not fixed", and stage 1 left it alone
+        on that basis. THE PREMISE WAS WRONG and the label has been withdrawn.
+      finding: >-
+        `fina_risk_cpp.cpp` tests all assets at/above the 110% call barrier on
+        the SAME fixing and explicitly refuses to credit a pre-latched asset.
+        The term sheet says the opposite, in the plainest possible words:
+        "a Reference Asset will BECOME a Memorised Reference Asset when a Memory
+        US Stocks Event ... has OCCURRED" and termination needs "EACH" asset to
+        have become one. A past, persistent status, not a same-day test.
+        The MurexPlaybook forbids the C++ reading in as many words:
+        "Never overwrite a prior memory-hit or KI state with a later non-hit
+        unless product semantics explicitly provide for reset, which the source
+        does not" (payoff/raki-plus.md:213); "Update ki_seen MONOTONICALLY"
+        (Products/KIKO/payoff/reverse-kiko.md:59); and the latch semantics are
+        "occurs at
+        least once for all underlyings" (eight files).
+        The playbook does flag simultaneity as an open question
+        (payoff/raki-plus.md:224) -- and then answers it in the same document,
+        at :213, in the direction above.
+      the_comment_is_backwards: >-
+        The source reads "that only makes the call easier and would lower the
+        reserve". It is not conservative -- it is the more expensive side.
+        MISSING a call leaves the note alive, so the coupon leg keeps running
+        and the terminal branch is never taken. Both are more liability, not
+        less. The comment's premise is inverted.
+      materiality_on_this_deal: >-
+        ADBE latched on 2026-06-01 (`GKODate[0] = 46174`), so from then on only
+        AMZN crossing 286.00 stands between the note and termination. The C++
+        lane additionally requires ADBE to be back ABOVE 263.967 on that same
+        day. The two readings differ on every path after 2026-06-01.
+      correct_implementation: >-
+        `pricing.py:304-321` is the conformant one -- per-asset, sticky, OR'd
+        into a path-level copy, seeded from `GKOLocked`, with
+        `is_called = path_locked.all(axis=1) & (call_date == steps)`.
+      action: >-
+        TAKEN AT STAGE 1, one site of three. `price_fixture` now reads
+        `KIKOSelect.GKOLocked` (`:464-493`) into a per-asset seed and applies a
+        sticky in-path latch (`:560-572`); the joint test and the comment
+        defending it are gone. Test `lane/global_ko_latch`, seven hand-derived
+        cases in `cpp/tests/global_ko_latch_test.cpp`. Reverting the fix fails
+        cases A, D and F; reverting only the seed fails A and F, so the two
+        halves are separately pinned.
+        Materiality on `termsheet1`: NONE, and for a stronger reason than the
+        test supplies. `termsheet1` is not priced through `price_fixture`; it
+        goes through `price_daily_compact`, which stage 1 did not touch. So the
+        fix cannot move that PV. Case B is still worth having, because it
+        reproduces the SHAPE of `termsheet1`'s `GKOLocked = [true, false]` in
+        this lane and pins that one latch out of two is not a call — which is
+        the guard against a fix that fires on a single latch and would make
+        every note in the book callable.
+        `run_cpp_parity:884-895` and `price_daily_compact:1084-1090` remain
+        OPEN; see `open_sites` below.
+    open_sites:
+      summary: >-
+        TWO OF THE THREE global-KO SITES IN `fina_risk_cpp.cpp` ARE STILL
+        NON-CONFORMANT, IN THE SAME FILE AS THE ONE THAT WAS FIXED. This is
+        recorded rather than fixed, and the reason it is not a local change is
+        the finding.
+      sites:
+        - {function: run_cpp_parity, lines: "884-895", status: open, severity: medium}
+        - {function: price_daily_compact, lines: "1084-1090", status: open,
+           severity: high, note: "the lane termsheet1 is actually priced through"}
+      why_not_fixed_now: >-
+        Both take the block from a COMPACT instrument record, not from the deal.
+        `price_daily_compact` reads `refs`, `strike`, `ki`, `call`, `expiry`,
+        `notional` and `quote_scale` off a json object, and that object has no
+        field for the latch: `gko_locked` is not read and the key is not in the
+        schema. The record schema is owned by whoever writes the records --
+        `scripts/generate_benchmark.py` and the ETL -- not by this file. So the
+        change is a record-schema change with a different owner and a different
+        risk profile, and it is a contract change rather than a bug fix.
+      why_not_just_add_the_read: >-
+        Reading `inst.value("gko_locked", ...)` in `price_daily_compact` would be
+        four lines, would compile, and would be INERT on every real deal,
+        because no producer ever sets the key. It would also make the diff say
+        "fixed". A change that is inert in production and legible in review is
+        worse than no change, so the two sites are left visibly non-conformant
+        with their line numbers here.
+      the_actual_consequence: >-
+        The C++ lane now contains BOTH readings of the contract, in one
+        translation unit, on the same deal geometry: a conformant sticky
+        per-asset latch in `price_fixture`, and the joint same-fixing test in
+        `run_cpp_parity` and `price_daily_compact`. There is no longer a single
+        site in this file to go and look at when two lanes disagree.
+      next_step: >-
+        Add `gko_locked` to the compact instrument record in
+        `generate_benchmark.py` and the ETL, then read it in
+        `price_daily_compact` and `run_cpp_parity` and extend
+        `cpp/tests/global_ko_latch_test.cpp` to price the daily lane as well.
+        Deliberately not done in the same pass as the `price_fixture` fix, so
+        that the two halves stay separately testable.
+      a_second_smaller_gap: >-
+        NEITHER LANE CHECKS THE LATCH DATE. `KIKOSelect.GKODate` dates each
+        latch and a latch dated after the evaluation date has not happened yet,
+        so crediting it would call a note that is not callable. `pricing.py`
+        seeds straight from `GKOLocked` and so does the new C++ read: one rule
+        in both lanes so they stay comparable. The gap is real, it is recorded
+        rather than half-fixed in one lane, and the test cases all use dates at
+        or before the evaluation date (or zero) so the gap cannot mask a
+        regression in the flag handling itself.
+    same_day_precedence: >-
+      A specification sentence the lanes do not implement and the registry did
+      not record: "If both a Local and Global KO are triggered on the same day,
+      the event is treated as a Global KO" -- Memory_Range_Accrual_MemRaki.md:18,
+      RAKI_Enhancement.md:48, Products/KIKO/Reverse_KIKO.md:30, and formally
+      as tau_G <= tau_L -> GKO in Products/KIKO/payoff/reverse-kiko.md:65.
+      payoff/raki-plus.md:30 claims the source does not say this; that claim is
+      contradicted by three sibling documents in the same playbook. Inert on
+      this deal (`localKO: false`) but it is a spec sentence.
+
+  - kind: local_ko_gate
+    title: Has a single name knocked out?
+    status: not_started
+    kernel_mapped: false
+    declared_kernel: {module: fina::risk::fcn, symbol: resolve_ko, header: cpp/include/fina_risk/barriers.hpp, line: 17}
+    kernel: null
+    book_page: 03-where-each-block-lives.md
+    reachable: false
+    note: >-
+      Shares the declared symbol with global_ko_gate, so the graph cannot tell the
+      two apart even in principle. UNREACHABLE BY CONSTRUCTION: local_enabled is
+      derived at payoff.py:596 from the presence of a local_ko_gate node, and
+      compile_payoff_graph never emits one. Inlined at engine.cpp:255-259 and :267.
+
+  - kind: worst_of_performance
+    title: Reduce the basket to its worst performer
+    status: not_started
+    book_page: 03-where-each-block-lives.md
+    kernel_mapped: false
+    kernel: null
+    inlined_site_count: 19
+    inlined_lanes: 6
+    inlined_sites:
+      - {lane: engine.cpp, lines: "235", note: "KO loop; also sets the memory latches"}
+      - {lane: engine.cpp, lines: "283", note: "coupon loop; does NOT set the latches - the two copies differ"}
+      - {lane: fina_risk_cpp.cpp, lines: "627/716/937/945/985/1127/1170"}
+      - {lane: fina_risk_cpp.cpp, lines: "823-824", note: "up_worst/down_worst, a DIFFERENT quantity - not this block"}
+      - {lane: pricing.py, lines: "250/404"}
+      - {lane: pricing.py, lines: "411", note: "also takes argmin, for the worst asset's identity"}
+      - {lane: fcn_reference.py, lines: "57/89"}
+      - {lane: daily_termsheet.py, lines: "253", note: "basket HARDCODED to 2 assets at :251-252"}
+      - {lane: hybrid.py, lines: "41/70", note: ":70-71 also takes argmin"}
+    note: >-
+      NO STANDALONE KERNEL, AND THE EARLIER COUNT OF "TWICE" WAS WRONG - it counted
+      engine.cpp alone. Nineteen sites across six lanes. Within engine.cpp the two
+      copies at :235 and :283 are NOT equivalent: :235 also sets the memory
+      latches, :283 does not, so the same expression has two different side
+      effects 48 lines apart. Two of the nineteen (fina_risk_cpp.cpp:776-777)
+      compute a barrier-scaled up/down worst, which is a different quantity
+      entirely. daily_termsheet.py:258-259 hardcodes the basket to two assets and
+      accepts three, so a 3-asset deal is silently priced on two. Extracting the
+      block is a prerequisite for testing it.
+    two_names_is_OUR_limit_not_the_products: >-
+      CORRECTION OF FRAMING. An earlier note recorded this as "the whole lane is
+      two-name by construction", which implies the product cannot do better. It
+      can. The MurexPlaybook states the platform limit explicitly: "Basket Size:
+      maximum of 6 underlying stocks" (RakiPlus_MemRakiPlus.md:121,
+      payoff/raki-plus.md:217), and the "Single Equity: not supported" line means
+      two is the MINIMUM. So the stage 1 refusal is right, and the platform path
+      already exists -- KIKOSELECT carries an array of underlyings and
+      per-underlying reference prices, and `engine.cpp:250` loops over
+      `cube.underlyings` at any width. It is an implementation gap of at most two
+      lines, not a product change.
+    the_indicator_is_now_defined: >-
+      The playbook leaves the aggregation convention undefined on purpose --
+      "The source labels the accrual indicator as either Worst Performance or All
+      Underlying, but does not define a mathematical aggregation convention for
+      either" (payoff/raki-plus.md:34). The TERM SHEET resolves it:
+      "Worst Performing Reference Asset ... the Reference Asset which generates
+      the lowest percentage", computed as
+      `(Closing Price of the relevant Reference Asset on the relevant Scheduled
+      Trading Day) / (Initial Spot Price of the relevant Reference Asset) x 100%`,
+      "rounded to four decimal places, with 0.00005 or above rounded upwards"
+      (termsheet1.md:275-276). So the indicator is
+      `min_i(close_i / initial_i)`, and the 4dp rule is a documented term-sheet
+      rule that no lane implements. The 4dp is immaterial except for exact ties,
+      and the tie-break is "in our sole and absolute discretion" -- explicitly
+      NOT modelable. Record it as a known-unimplementable term rather than a
+      missing one.
+    latched_assets_stay_in_the_basket: >-
+      A term-sheet rule that rules out a tempting optimisation, and is currently
+      satisfied by accident: "if a Reference Asset becomes a Memorised Reference
+      Asset, such Reference Asset REMAINS as part of the Reference Basket for the
+      purposes of determining whether a Knock-in Event has occurred and for the
+      purposes of determining the Final Settlement Payout" (termsheet1.md:279).
+      No lane drops a latched asset, and the graph edge
+      `worst_of_performance -> knock_in_gate` is therefore correct. A future
+      optimisation that excludes called assets would break the contract.
+    maturbarrier_ge_kibarrier_is_load_bearing: >-
+      A DERIVED invariant, documented nowhere. The KI payoff has two branches,
+      selected on `WPS >= MaturBarrier` (payoff/raki-plus.md:139-140, and the
+      product form at RakiPlus_MemRakiPlus.md:38,55). This deal sets
+      `MaturBarrier = 0.78` and `KIBarrier = 0.7`; a knocked-in deal has
+      WPS <= 0.70 < 0.78, so the KI1 branch is UNREACHABLE -- which is the only
+      reason it is safe that `strikeKI1 = 0`. If a booking ever set
+      `MaturBarrier` below the KI barrier, the deal would reach
+      `PR_KI1 * (WPS / Strike_KI1 - 1)` with `Strike_KI1 = 0` and divide by zero.
+      Assert the invariant; do not rely on it.
+
+  - kind: payment_discount
+    title: Discount a cash flow to today
+    status: not_started
+    book_page: 03-where-each-block-lives.md
+    inlined_sites:
+      - {lane: engine.cpp, lines: "298/309/314", rate: "curve_rate_at, interpolated at settlement"}
+      - {lane: fina_risk_cpp.cpp, lines: "644/993/1177", rate: "flat rate"}
+      - {lane: pricing.py, lines: "328/408", rate: "flat market.rate"}
+      - {lane: fcn_reference.py, lines: "106/112/115", rate: "flat rate"}
+      - {lane: daily_termsheet.py, lines: "269/304", rate: "curve[0].rate, first pillar only"}
+    kernel_mapped: false
+    kernel: null
+    note: >-
+      NO STANDALONE KERNEL. Three inlined expressions, at engine.cpp:317, :328
+      and :333. The curve lookup itself is a pure function, curve_rate_at in
+      cpp/include/fina_risk/terms.hpp:15, and is testable today.
